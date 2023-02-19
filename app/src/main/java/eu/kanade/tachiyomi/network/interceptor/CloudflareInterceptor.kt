@@ -2,6 +2,8 @@ package eu.kanade.tachiyomi.network.interceptor
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.webkit.WebView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -59,7 +61,7 @@ class CloudflareInterceptor(private val context: Context) : WebViewInterceptor(c
                     }
                 }
             } else {
-                resolveWithWebView(originalRequest, oldCookie)
+                resolveWithWebView(request, oldCookie)
             }
 
             return chain.proceed(request)
@@ -86,8 +88,7 @@ class CloudflareInterceptor(private val context: Context) : WebViewInterceptor(c
         var isWebViewOutdated = false
 
         val origRequestUrl = originalRequest.url.toString()
-        val headers =
-            parseHeaders(originalRequest.headers)
+        val headers = parseHeaders(originalRequest.headers)
 
         executor.execute {
             webView = createWebView(originalRequest)

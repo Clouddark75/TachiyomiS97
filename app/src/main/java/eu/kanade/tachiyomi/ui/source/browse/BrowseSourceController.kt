@@ -73,6 +73,7 @@ open class BrowseSourceController(bundle: Bundle) :
         source: CatalogueSource,
         searchQuery: String? = null,
         smartSearchConfig: BrowseController.SmartSearchConfig? = null,
+        useLatest: Boolean = false,
     ) : this(
         Bundle().apply {
             putLong(SOURCE_ID_KEY, source.id)
@@ -84,6 +85,7 @@ open class BrowseSourceController(bundle: Bundle) :
             if (smartSearchConfig != null) {
                 putParcelable(SMART_SEARCH_CONFIG_KEY, smartSearchConfig)
             }
+            putBoolean(USE_LATEST_KEY, useLatest)
         },
     )
 
@@ -145,7 +147,11 @@ open class BrowseSourceController(bundle: Bundle) :
 //    }
 
     override fun createPresenter(): BrowseSourcePresenter {
-        return BrowseSourcePresenter(args.getLong(SOURCE_ID_KEY), args.getString(SEARCH_QUERY_KEY))
+        return BrowseSourcePresenter(
+            args.getLong(SOURCE_ID_KEY),
+            args.getString(SEARCH_QUERY_KEY),
+            args.getBoolean(USE_LATEST_KEY),
+        )
     }
 
     override fun createBinding(inflater: LayoutInflater) = BrowseSourceControllerBinding.inflate(inflater)
@@ -282,12 +288,31 @@ open class BrowseSourceController(bundle: Bundle) :
             searchView?.setQuery("", true)
         }
 
+        updatePopularLatestIcon(menu)
+
         setOnQueryTextChangeListener(searchView, onlyOnSubmit = true, hideKbOnSubmit = true) {
             searchWithQuery(it ?: "")
             true
         }
         // Show next display mode
         updateDisplayMenuItem(menu)
+    }
+
+    private fun updatePopularLatestIcon(menu: Menu?) {
+        menu?.findItem(R.id.action_popular_latest)?.apply {
+            val icon = if (!presenter.useLatest) {
+                R.drawable.ic_new_releases_24dp
+            } else {
+                R.drawable.ic_heart_24dp
+            }
+            setIcon(icon)
+            val titleRes = if (!presenter.useLatest) {
+                R.string.latest
+            } else {
+                R.string.popular
+            }
+            setTitle(titleRes)
+        }
     }
 
     private fun updateDisplayMenuItem(menu: Menu?, isListMode: Boolean? = null) {
@@ -314,6 +339,8 @@ open class BrowseSourceController(bundle: Bundle) :
 
         val isHttpSource = presenter.source is HttpSource
         menu.findItem(R.id.action_open_in_web_view).isVisible = isHttpSource
+        val supportsLatest = (presenter.source as? CatalogueSource)?.supportsLatest == true
+        menu.findItem(R.id.action_popular_latest).isVisible = supportsLatest
 
         val isLocalSource = presenter.source is LocalSource
         menu.findItem(R.id.action_local_source_help).isVisible = isLocalSource
@@ -325,6 +352,7 @@ open class BrowseSourceController(bundle: Bundle) :
             R.id.action_display_mode -> swapDisplayMode()
             R.id.action_open_in_web_view -> openInWebView()
             R.id.action_local_source_help -> openLocalSourceHelpGuide()
+            R.id.action_popular_latest -> swapPopularLatest()
             else -> return super.onOptionsItemSelected(item)
         }
         return true
@@ -374,6 +402,7 @@ open class BrowseSourceController(bundle: Bundle) :
                 showProgressBar()
                 adapter?.clear()
                 presenter.setSourceFilter(if (allDefault) FilterList() else presenter.sourceFilters)
+                updatePopLatestIcons()
             }
         }
 
@@ -408,8 +437,11 @@ open class BrowseSourceController(bundle: Bundle) :
             if (sourceFilter is Filter.Group<*>) {
                 for (filter in sourceFilter.state) {
                     if (filter is Filter<*> &&
-                        if (useContains) filter.name.contains(genreName, true)
-                        else filter.name.equals(genreName, true)
+                        if (useContains) {
+                            filter.name.contains(genreName, true)
+                        } else {
+                            filter.name.equals(genreName, true)
+                        }
                     ) {
                         when (filter) {
                             is Filter.TriState -> filter.state = 1
@@ -423,8 +455,11 @@ open class BrowseSourceController(bundle: Bundle) :
             } else if (sourceFilter is Filter.Select<*>) {
                 val index = sourceFilter.values.filterIsInstance<String>()
                     .indexOfFirst {
-                        if (useContains) it.contains(genreName, true)
-                        else it.equals(genreName, true)
+                        if (useContains) {
+                            it.contains(genreName, true)
+                        } else {
+                            it.equals(genreName, true)
+                        }
                     }
 
                 if (index != -1) {
@@ -482,6 +517,7 @@ open class BrowseSourceController(bundle: Bundle) :
         adapter?.clear()
 
         presenter.restartPager(newQuery, presenter.sourceFilters)
+        updatePopLatestIcons()
     }
 
     /**
@@ -545,8 +581,11 @@ open class BrowseSourceController(bundle: Bundle) :
             }
 
             binding.emptyView.show(
-                if (presenter.source is HttpSource) R.drawable.ic_browse_off_24dp
-                else R.drawable.ic_local_library_24dp,
+                if (presenter.source is HttpSource) {
+                    R.drawable.ic_browse_off_24dp
+                } else {
+                    R.drawable.ic_local_library_24dp
+                },
                 message,
                 actions,
             )
@@ -624,6 +663,31 @@ open class BrowseSourceController(bundle: Bundle) :
                 (adapter.getItem(it) as? BrowseSourceItem)?.manga
             }
             presenter.initializeMangas(mangas)
+        }
+    }
+
+    private fun swapPopularLatest() {
+        val adapter = adapter ?: return
+
+        presenter.useLatest = !presenter.useLatest
+        showProgressBar()
+        adapter.clear()
+        updatePopLatestIcons()
+
+        val searchItem = activityBinding?.searchToolbar?.searchItem
+        searchItem?.collapseActionView()
+
+        presenter.appliedFilters = FilterList()
+        val newFilters = presenter.source.getFilterList()
+        presenter.sourceFilters = newFilters
+        presenter.filtersChanged = false
+
+        presenter.restartPager("")
+    }
+
+    private fun updatePopLatestIcons() {
+        listOf(activityBinding?.toolbar?.menu, activityBinding?.searchToolbar?.menu).forEach {
+            updatePopularLatestIcon(it)
         }
     }
 
@@ -714,6 +778,7 @@ open class BrowseSourceController(bundle: Bundle) :
         const val SOURCE_ID_KEY = "sourceId"
 
         const val SEARCH_QUERY_KEY = "searchQuery"
+        const val USE_LATEST_KEY = "useLatest"
         const val SMART_SEARCH_CONFIG_KEY = "smartSearchConfig"
     }
 }

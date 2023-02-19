@@ -5,19 +5,22 @@ import androidx.preference.PreferenceGroup
 import androidx.preference.PreferenceScreen
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.preference.asImmediateFlowIn
-import eu.kanade.tachiyomi.data.track.NoLoginTrackService
+import eu.kanade.tachiyomi.data.track.EnhancedTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.data.track.anilist.AnilistApi
 import eu.kanade.tachiyomi.data.track.bangumi.BangumiApi
 import eu.kanade.tachiyomi.data.track.myanimelist.MyAnimeListApi
 import eu.kanade.tachiyomi.data.track.shikimori.ShikimoriApi
+import eu.kanade.tachiyomi.source.SourceManager
 import eu.kanade.tachiyomi.util.system.launchIO
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.view.snack
 import eu.kanade.tachiyomi.widget.preference.TrackLoginDialog
 import eu.kanade.tachiyomi.widget.preference.TrackLogoutDialog
 import eu.kanade.tachiyomi.widget.preference.TrackerPreference
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
 import eu.kanade.tachiyomi.data.preference.PreferenceKeys as Keys
 
@@ -50,10 +53,10 @@ class SettingsTrackingController :
             titleRes = R.string.services
 
             trackPreference(trackManager.myAnimeList) {
-                activity?.openInBrowser(MyAnimeListApi.authUrl(), trackManager.myAnimeList.getLogoColor())
+                activity?.openInBrowser(MyAnimeListApi.authUrl(), trackManager.myAnimeList.getLogoColor(), true)
             }
             trackPreference(trackManager.aniList) {
-                activity?.openInBrowser(AnilistApi.authUrl(), trackManager.aniList.getLogoColor())
+                activity?.openInBrowser(AnilistApi.authUrl(), trackManager.aniList.getLogoColor(), true)
             }
             preference {
                 key = "update_anilist_scoring"
@@ -93,26 +96,29 @@ class SettingsTrackingController :
                 dialog.showDialog(router)
             }
             trackPreference(trackManager.shikimori) {
-                activity?.openInBrowser(ShikimoriApi.authUrl(), trackManager.shikimori.getLogoColor())
+                activity?.openInBrowser(ShikimoriApi.authUrl(), trackManager.shikimori.getLogoColor(), true)
             }
             trackPreference(trackManager.bangumi) {
-                activity?.openInBrowser(BangumiApi.authUrl(), trackManager.bangumi.getLogoColor())
+                activity?.openInBrowser(BangumiApi.authUrl(), trackManager.bangumi.getLogoColor(), true)
             }
             infoPreference(R.string.tracking_info)
         }
         preferenceCategory {
             titleRes = R.string.enhanced_services
-            trackPreference(trackManager.komga) {
-                trackManager.komga.loginNoop()
-                updatePreference(trackManager.komga.id)
-            }
+            val sourceManager = Injekt.get<SourceManager>()
+            val enhancedTrackers = trackManager.services
+                .filter { service ->
+                    if (service !is EnhancedTrackService) return@filter false
+                    sourceManager.getCatalogueSources().any { service.accept(it) }
+                }
+            enhancedTrackers.forEach { trackPreference(it) }
             infoPreference(R.string.enhanced_tracking_info)
         }
     }
 
     private inline fun PreferenceGroup.trackPreference(
         service: TrackService,
-        crossinline login: () -> Unit,
+        crossinline login: () -> Unit = { },
     ): TrackerPreference {
         return add(
             TrackerPreference(context).apply {
@@ -122,7 +128,7 @@ class SettingsTrackingController :
                 iconColor = service.getLogoColor()
                 onClick {
                     if (service.isLogged) {
-                        if (service is NoLoginTrackService) {
+                        if (service is EnhancedTrackService) {
                             service.logout()
                             updatePreference(service.id)
                         } else {
@@ -131,7 +137,12 @@ class SettingsTrackingController :
                             dialog.showDialog(router)
                         }
                     } else {
-                        login()
+                        if (service is EnhancedTrackService) {
+                            service.loginNoop()
+                            updatePreference(service.id)
+                        } else {
+                            login()
+                        }
                     }
                 }
             },

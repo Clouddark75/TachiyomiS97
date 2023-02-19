@@ -206,9 +206,9 @@
         <item quantity="other">Palikušas %1$d lapas</item>
     </plurals>
     <plurals name="chapters_plural">
-        <item quantity="zero">%1$d nodaļas</item>
-        <item quantity="one">%1$d nodaļa</item>
-        <item quantity="other">%1$d nodaļas</item>
+        <item quantity="zero">%1$s nodaļas</item>
+        <item quantity="one">%1$s nodaļa</item>
+        <item quantity="other">%1$s nodaļas</item>
     </plurals>
     <string name="by_update_date">Pēc augšupielādes datuma</string>
     <string name="by_chapter_number">Pēc nodaļas numura</string>
@@ -552,4 +552,5 @@
     <string name="reduces_banding_impacts_performance">Samazina grupēšanu, bet var ietekmēt veiktspēju</string>
     <string name="webtoon_side_padding_5">5%</string>
     <string name="downloaded_chapters">Lejupielādētās nodaļas</string>
+    <string name="allow_deleting_bookmarked_chapters">Atļaut dzēst ar grāmatzīmēm atzīmētās nodaļas</string>
 </resources>

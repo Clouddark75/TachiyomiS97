@@ -43,7 +43,6 @@ import eu.kanade.tachiyomi.ui.setting.SettingsBrowseController
 import eu.kanade.tachiyomi.ui.setting.SettingsSourcesController
 import eu.kanade.tachiyomi.ui.source.browse.BrowseSourceController
 import eu.kanade.tachiyomi.ui.source.globalsearch.GlobalSearchController
-import eu.kanade.tachiyomi.ui.source.latest.LatestUpdatesController
 import eu.kanade.tachiyomi.util.system.dpToPx
 import eu.kanade.tachiyomi.util.system.getBottomGestureInsets
 import eu.kanade.tachiyomi.util.system.getResourceColor
@@ -206,12 +205,16 @@ class BrowseController :
                         updateTitleAndMenu()
                         if (state == BottomSheetBehavior.STATE_EXPANDED) {
                             extBottomSheet.fetchOnlineExtensionsIfNeeded()
-                        } else extBottomSheet.shouldCallApi = true
+                        } else {
+                            extBottomSheet.shouldCallApi = true
+                        }
                     }
 
                     retainViewMode = if (state == BottomSheetBehavior.STATE_EXPANDED) {
                         RetainViewMode.RETAIN_DETACH
-                    } else RetainViewMode.RELEASE_DETACH
+                    } else {
+                        RetainViewMode.RELEASE_DETACH
+                    }
                     binding.bottomSheet.sheetLayout.isClickable = state == BottomSheetBehavior.STATE_COLLAPSED
                     binding.bottomSheet.sheetLayout.isFocusable = state == BottomSheetBehavior.STATE_COLLAPSED
                     if (state == BottomSheetBehavior.STATE_COLLAPSED || state == BottomSheetBehavior.STATE_EXPANDED) {
@@ -253,8 +256,11 @@ class BrowseController :
         oldSearchView?.setOnQueryTextListener(null)
         binding.bottomSheet.sheetToolbar.menu.clear()
         binding.bottomSheet.sheetToolbar.inflateMenu(
-            if (binding.bottomSheet.tabs.selectedTabPosition == 0) R.menu.extension_main
-            else R.menu.migration_main,
+            if (binding.bottomSheet.tabs.selectedTabPosition == 0) {
+                R.menu.extension_main
+            } else {
+                R.menu.migration_main
+            },
         )
 
         val id = when (PreferenceValues.MigrationSourceOrder.fromPreference(preferences)) {
@@ -556,7 +562,7 @@ class BrowseController :
      */
     override fun onLatestClick(position: Int) {
         val item = adapter?.getItem(position) as? SourceItem ?: return
-        openCatalogue(item.source, LatestUpdatesController(item.source))
+        openCatalogue(item.source, BrowseSourceController(item.source, useLatest = true))
     }
 
     /**
@@ -579,8 +585,11 @@ class BrowseController :
     }
 
     override fun expandSearch() {
-        if (showingExtensions) binding.bottomSheet.root.sheetBehavior?.collapse()
-        else activityBinding?.searchToolbar?.menu?.findItem(R.id.action_search)?.expandActionView()
+        if (showingExtensions) {
+            binding.bottomSheet.root.sheetBehavior?.collapse()
+        } else {
+            activityBinding?.searchToolbar?.menu?.findItem(R.id.action_search)?.expandActionView()
+        }
     }
 
     /**

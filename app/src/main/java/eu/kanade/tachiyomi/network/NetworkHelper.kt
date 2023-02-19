@@ -21,6 +21,9 @@ class NetworkHelper(val context: Context) {
 
     val cookieManager = AndroidCookieJar()
 
+    private val userAgentInterceptor by lazy { UserAgentInterceptor() }
+    private val cloudflareInterceptor by lazy { CloudflareInterceptor(context) }
+
     private val baseClientBuilder: OkHttpClient.Builder
         get() {
             val builder = OkHttpClient.Builder()
@@ -28,7 +31,7 @@ class NetworkHelper(val context: Context) {
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)
                 .callTimeout(2, TimeUnit.MINUTES)
-                .addInterceptor(UserAgentInterceptor())
+                .addInterceptor(userAgentInterceptor)
                 .apply {
                     if (BuildConfig.DEBUG) {
                         /*addInterceptor(
@@ -54,17 +57,18 @@ class NetworkHelper(val context: Context) {
 
     val client by lazy { baseClientBuilder.cache(Cache(cacheDir, cacheSize)).build() }
 
+    @Suppress("UNUSED")
     val cloudflareClient by lazy {
         client.newBuilder()
-            .addInterceptor(CloudflareInterceptor(context))
+            .addInterceptor(cloudflareInterceptor)
             .build()
     }
 
     val defaultUserAgent by lazy {
-        preferences.defaultUserAgent().get()
+        preferences.defaultUserAgent().get().replace("\n", " ").trim()
     }
 
     companion object {
-        val DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0"
+        const val DEFAULT_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:106.0) Gecko/20100101 Firefox/108.0"
     }
 }

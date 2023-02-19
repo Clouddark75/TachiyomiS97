@@ -5,13 +5,15 @@ import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.asObservableSuccess
-import eu.kanade.tachiyomi.network.newCallWithProgress
+import eu.kanade.tachiyomi.network.awaitSuccess
+import eu.kanade.tachiyomi.network.newCachelessCallWithProgress
 import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.model.FilterList
 import eu.kanade.tachiyomi.source.model.MangasPage
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.model.SManga
+import eu.kanade.tachiyomi.util.lang.getUrlWithoutDomain
 import okhttp3.Headers
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -94,9 +96,11 @@ abstract class HttpSource : CatalogueSource {
             }
     }
 
-    fun getExtension(): Extension.Installed? {
-        return Injekt.get<ExtensionManager>().installedExtensions.find { it.sources.contains(this) }
-    }
+    fun getExtension(extensionManager: ExtensionManager? = null): Extension.Installed? =
+        (extensionManager ?: Injekt.get()).installedExtensions.find { it.sources.contains(this) }
+
+    fun extOnlyHasAllLanguage(extensionManager: ExtensionManager? = null) =
+        getExtension(extensionManager)?.sources?.all { it.lang == "all" } ?: true
 
     /**
      * Returns the request for the popular manga given the page.
@@ -302,8 +306,19 @@ abstract class HttpSource : CatalogueSource {
      * @param page the page whose source image has to be downloaded.
      */
     fun fetchImage(page: Page): Observable<Response> {
-        return client.newCallWithProgress(imageRequest(page), page)
+        return client.newCachelessCallWithProgress(imageRequest(page), page)
             .asObservableSuccess()
+    }
+
+    /**
+     * Returns the response of the source image.
+     *
+     * @param page the page whose source image has to be downloaded.
+     */
+    suspend fun getImage(page: Page): Response {
+        // images will be cached or saved manually, so don't take up network cache
+        return client.newCachelessCallWithProgress(imageRequest(page), page)
+            .awaitSuccess()
     }
 
     /**
@@ -354,6 +369,65 @@ abstract class HttpSource : CatalogueSource {
             out
         } catch (e: URISyntaxException) {
             orig
+        }
+    }
+
+    /**
+     * Returns the url of the provided manga
+     *
+     * @since extensions-lib 1.4
+     * @param manga the manga
+     * @return url of the manga
+     */
+    open fun getMangaUrl(manga: SManga): String {
+        return mangaDetailsRequest(manga).url.toString()
+    }
+
+    /**
+     * Returns the url of the provided chapter, default is empty to use workaround when possible
+     *
+     * @since extensions-lib 1.4
+     * @param chapter the chapter
+     * @return url of the chapter
+     */
+    open fun getChapterUrl(chapter: SChapter): String {
+        return ""
+    }
+
+    fun getChapterUrl(manga: SManga?, chapter: SChapter): String? {
+        manga ?: return null
+
+        val chapterUrl = chapter.url.getUrlWithoutDomain()
+        val mangaUrl = getMangaUrl(manga)
+        return if (chapterUrl.isBlank()) {
+            mangaUrl
+        } else {
+            fullChapterUrl(mangaUrl, chapterUrl, chapter)
+        }
+    }
+
+    /** Helper method to handle guya-like sources */
+    private fun fullChapterUrl(mangaUrl: String, chapterUrl: String, chapter: SChapter): String {
+        val lowerUrl = baseUrl.lowercase()
+        return when {
+            chapter.url.startsWith("http") -> {
+                chapter.url
+            }
+            lowerUrl.contains("guya") || lowerUrl.contains("danke") ||
+                lowerUrl.contains("hachirumi") || lowerUrl.contains("mahoushoujobu") ||
+                (lowerUrl.contains("cubari") && !mangaUrl.contains("imgur")) -> {
+                // cubari links would have double / without the trim end
+                mangaUrl.trimEnd('/') + "/" + chapter.chapter_number.fmt().replace(".", "-")
+            }
+            else -> baseUrl + chapterUrl
+        }
+    }
+
+    private fun Float.fmt(): String {
+        return if (this == toLong().toFloat()) {
+            String.format("%d", toLong())
+        } else {
+            String.format("%s", this)
         }
     }
 

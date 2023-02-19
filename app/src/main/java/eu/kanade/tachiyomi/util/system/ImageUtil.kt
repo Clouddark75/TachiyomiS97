@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.util.system
 
+import android.app.Activity
 import android.content.Context
 import android.content.res.Configuration
 import android.content.res.Resources
@@ -52,8 +53,8 @@ object ImageUtil {
     }
 
     fun findImageType(stream: InputStream): ImageType? {
-        try {
-            return when (getImageType(stream)?.format) {
+        return try {
+            when (getImageType(stream)?.format) {
                 Format.Avif -> ImageType.AVIF
                 Format.Gif -> ImageType.GIF
                 Format.Heif -> ImageType.HEIF
@@ -64,8 +65,8 @@ object ImageUtil {
                 else -> null
             }
         } catch (e: Exception) {
+            null
         }
-        return null
     }
 
     fun resizeBitMapDrawable(drawable: Drawable, resources: Resources?, size: Int): Drawable? {
@@ -75,8 +76,11 @@ object ImageUtil {
         } else {
             null
         }
-        return if (bitmapResized != null) BitmapDrawable(resources, bitmapResized)
-        else null
+        return if (bitmapResized != null) {
+            BitmapDrawable(resources, bitmapResized)
+        } else {
+            null
+        }
     }
 
     fun getExtensionFromMimeType(mime: String?): String {
@@ -129,7 +133,9 @@ object ImageUtil {
     }
 
     fun autoSetBackground(image: Bitmap?, alwaysUseWhite: Boolean, context: Context): Drawable {
-        val backgroundColor = if (alwaysUseWhite) Color.WHITE else {
+        val backgroundColor = if (alwaysUseWhite) {
+            Color.WHITE
+        } else {
             context.getResourceColor(R.attr.readerBackground)
         }
         if (image == null) return ColorDrawable(backgroundColor)
@@ -274,15 +280,19 @@ object ImageUtil {
         }
         val isLandscape = context.resources.configuration?.orientation == Configuration.ORIENTATION_LANDSCAPE
         if (darkBG) {
-            return if (!isLandscape && image.getPixel(left, bot).isWhite && image.getPixel(right, bot).isWhite) GradientDrawable(
-                GradientDrawable.Orientation.TOP_BOTTOM,
-                intArrayOf(blackPixel, blackPixel, backgroundColor, backgroundColor),
-            )
-            else if (!isLandscape && image.getPixel(left, top).isWhite && image.getPixel(right, top).isWhite) GradientDrawable(
-                GradientDrawable.Orientation.TOP_BOTTOM,
-                intArrayOf(backgroundColor, backgroundColor, blackPixel, blackPixel),
-            )
-            else ColorDrawable(blackPixel)
+            return if (!isLandscape && image.getPixel(left, bot).isWhite && image.getPixel(right, bot).isWhite) {
+                GradientDrawable(
+                    GradientDrawable.Orientation.TOP_BOTTOM,
+                    intArrayOf(blackPixel, blackPixel, backgroundColor, backgroundColor),
+                )
+            } else if (!isLandscape && image.getPixel(left, top).isWhite && image.getPixel(right, top).isWhite) {
+                GradientDrawable(
+                    GradientDrawable.Orientation.TOP_BOTTOM,
+                    intArrayOf(backgroundColor, backgroundColor, blackPixel, blackPixel),
+                )
+            } else {
+                ColorDrawable(blackPixel)
+            }
         }
         if (!isLandscape && (
             topIsBlackStreak || (
@@ -420,6 +430,8 @@ object ImageUtil {
         imageBitmap2: Bitmap,
         isLTR: Boolean,
         @ColorInt background: Int = Color.WHITE,
+        hingeGap: Int = 0,
+        context: Context? = null,
         progressCallback: ((Int) -> Unit)? = null,
     ): ByteArrayInputStream {
         val height = imageBitmap.height
@@ -427,26 +439,82 @@ object ImageUtil {
         val height2 = imageBitmap2.height
         val width2 = imageBitmap2.width
         val maxHeight = max(height, height2)
-        val result = Bitmap.createBitmap(width + width2, max(height, height2), Bitmap.Config.ARGB_8888)
+        val maxWidth = max(width, width2)
+        val adjustedHingeGap = context?.let {
+            val fullHeight = (context as? Activity)?.window?.decorView?.height
+                ?: context.resources.displayMetrics.heightPixels
+            (maxHeight.toFloat() / fullHeight * hingeGap).toInt()
+        } ?: hingeGap
+        val result = Bitmap.createBitmap((maxWidth * 2) + adjustedHingeGap, maxHeight, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(result)
         canvas.drawColor(background)
         val upperPart = Rect(
-            if (isLTR) 0 else width2,
+            if (isLTR) max(maxWidth - imageBitmap.width, 0) else maxWidth + adjustedHingeGap,
             (maxHeight - imageBitmap.height) / 2,
-            (if (isLTR) 0 else width2) + imageBitmap.width,
+            (if (isLTR) max(maxWidth - imageBitmap.width, 0) else maxWidth + adjustedHingeGap) + imageBitmap.width,
             imageBitmap.height + (maxHeight - imageBitmap.height) / 2,
         )
         canvas.drawBitmap(imageBitmap, imageBitmap.rect, upperPart, null)
         progressCallback?.invoke(98)
         val bottomPart = Rect(
-            if (!isLTR) 0 else width,
+            if (!isLTR) max(maxWidth - imageBitmap2.width, 0) else maxWidth + adjustedHingeGap,
             (maxHeight - imageBitmap2.height) / 2,
-            (if (!isLTR) 0 else width) + imageBitmap2.width,
+            (if (!isLTR) max(maxWidth - imageBitmap2.width, 0) else maxWidth + adjustedHingeGap) + imageBitmap2.width,
             imageBitmap2.height + (maxHeight - imageBitmap2.height) / 2,
         )
         canvas.drawBitmap(imageBitmap2, imageBitmap2.rect, bottomPart, null)
         progressCallback?.invoke(99)
 
+        val output = ByteArrayOutputStream()
+        result.compress(Bitmap.CompressFormat.JPEG, 100, output)
+        progressCallback?.invoke(100)
+        return ByteArrayInputStream(output.toByteArray())
+    }
+
+    fun padSingleImage(
+        imageBitmap: Bitmap,
+        isLTR: Boolean,
+        atBeginning: Boolean?,
+        @ColorInt background: Int,
+        hingeGap: Int,
+        context: Context,
+        progressCallback: ((Int) -> Unit)? = null,
+    ): ByteArrayInputStream {
+        val height = imageBitmap.height
+        val width = imageBitmap.width
+        val isFullPageSpread = height < width
+        val fullHeight = (context as? Activity)?.window?.decorView?.height
+            ?: context.resources.displayMetrics.heightPixels
+        val adjustedHingeGap = (height.toFloat() / fullHeight * hingeGap).toInt()
+        val result = Bitmap.createBitmap(
+            (if (isFullPageSpread) width else (width * 2)) + adjustedHingeGap,
+            height,
+            Bitmap.Config.ARGB_8888,
+        )
+        val canvas = Canvas(result)
+        canvas.drawColor(background)
+        if (isFullPageSpread) {
+            val leftPart = Rect(0, 0, width / 2, height)
+            canvas.drawBitmap(imageBitmap, imageBitmap.rect.also { it.right /= 2 }, leftPart, null)
+            progressCallback?.invoke(98)
+            val rightPart = Rect(
+                width / 2 + adjustedHingeGap,
+                0,
+                width + adjustedHingeGap,
+                height,
+            )
+            canvas.drawBitmap(imageBitmap, imageBitmap.rect.also { it.left = width / 2 }, rightPart, null)
+        } else {
+            val placeOnLeft = if (atBeginning == null) true else isLTR.xor(atBeginning)
+            val upperPart = Rect(
+                if (placeOnLeft) 0 else width + adjustedHingeGap,
+                0,
+                (if (placeOnLeft) 0 else width + adjustedHingeGap) + width,
+                height,
+            )
+            canvas.drawBitmap(imageBitmap, imageBitmap.rect, upperPart, null)
+        }
+        progressCallback?.invoke(99)
         val output = ByteArrayOutputStream()
         result.compress(Bitmap.CompressFormat.JPEG, 100, output)
         progressCallback?.invoke(100)

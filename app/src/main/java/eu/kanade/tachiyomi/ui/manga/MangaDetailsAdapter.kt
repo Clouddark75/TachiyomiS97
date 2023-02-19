@@ -86,8 +86,11 @@ class MangaDetailsAdapter(
                 val volume = ChapterUtil.getGroupNumber(chapter)
                 if (volume != null) {
                     recyclerView.context.getString(
-                        if (scrollType == MangaDetailsPresenter.MULTIPLE_SEASONS) R.string.season_
-                        else R.string.volume_,
+                        if (scrollType == MangaDetailsPresenter.MULTIPLE_SEASONS) {
+                            R.string.season_
+                        } else {
+                            R.string.volume_
+                        },
                         volume,
                     )
                 } else {
@@ -115,8 +118,9 @@ class MangaDetailsAdapter(
 
     private fun get10sRange(value: Float): String {
         val number = value.toInt()
-        return if (number < 10) "0-9"
-        else {
+        return if (number < 10) {
+            "0-9"
+        } else {
             val hundred = number / 10
             "${hundred}0-${hundred + 1}9"
         }
@@ -133,9 +137,7 @@ class MangaDetailsAdapter(
         fun startDownloadRange(position: Int)
         fun readNextChapter(readingButton: View)
         fun topCoverHeight(): Int
-        fun localSearch(text: String)
-        fun globalSearch(text: String)
-        fun showFloatingActionMode(view: TextView, content: String? = null, searchSource: Boolean = false)
+        fun showFloatingActionMode(view: TextView, content: String? = null, isTag: Boolean = false)
         fun showChapterFilter()
         fun favoriteManga(longPress: Boolean)
         fun copyToClipboard(content: String, label: Int, useToast: Boolean = false)

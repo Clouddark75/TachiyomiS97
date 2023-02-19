@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.source
 
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
+import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.LocalSource
 import eu.kanade.tachiyomi.source.SourceManager
@@ -26,6 +27,7 @@ import java.util.TreeMap
 class SourcePresenter(
     val controller: BrowseController,
     val sourceManager: SourceManager = Injekt.get(),
+    val extensionManager: ExtensionManager = Injekt.get(),
     private val preferences: PreferencesHelper = Injekt.get(),
 ) {
 
@@ -108,8 +110,11 @@ class SourcePresenter(
         return (sourceManager.get(value) as? CatalogueSource)?.let { source ->
             val pinnedCatalogues = preferences.pinnedCatalogues().get()
             val isPinned = source.id.toString() in pinnedCatalogues
-            if (isPinned) null
-            else SourceItem(source, LangItem(LAST_USED_KEY), isPinned)
+            if (isPinned) {
+                null
+            } else {
+                SourceItem(source, LangItem(LAST_USED_KEY), isPinned)
+            }
         }
     }
 

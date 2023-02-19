@@ -287,6 +287,8 @@ class PreferencesHelper(val context: Context) {
 
     fun filterCompleted() = flowPrefs.getInt(Keys.filterCompleted, 0)
 
+    fun filterBookmarked() = flowPrefs.getInt("pref_filter_bookmarked_key", 0)
+
     fun filterTracked() = flowPrefs.getInt(Keys.filterTracked, 0)
 
     fun filterMangaType() = flowPrefs.getInt(Keys.filterMangaType, 0)
@@ -329,6 +331,8 @@ class PreferencesHelper(val context: Context) {
     fun skipRead() = prefs.getBoolean(Keys.skipRead, false)
 
     fun skipFiltered() = prefs.getBoolean(Keys.skipFiltered, true)
+
+    fun skipDupe() = flowPrefs.getBoolean("skip_dupe", false)
 
     fun useBiometrics() = flowPrefs.getBoolean(Keys.useBiometrics, false)
 
@@ -393,6 +397,8 @@ class PreferencesHelper(val context: Context) {
 
     fun deleteRemovedChapters() = flowPrefs.getInt(Keys.deleteRemovedChapters, 0)
 
+    fun removeBookmarkedChapters() = flowPrefs.getBoolean("pref_remove_bookmarked", false)
+
     fun showAllCategories() = flowPrefs.getBoolean("show_all_categories", true)
 
     fun showAllCategoriesWhenSearchingSingleCategory() = flowPrefs.getBoolean("show_all_categories_when_searching_single_category", false)
@@ -412,6 +418,8 @@ class PreferencesHelper(val context: Context) {
     fun showCategoryInTitle() = flowPrefs.getBoolean("category_in_title", false)
 
     fun onlySearchPinned() = flowPrefs.getBoolean(Keys.onlySearchPinned, false)
+
+    fun hideInLibraryItems() = flowPrefs.getBoolean("browse_hide_in_library_items", false)
 
     // Tutorial preferences
     fun shownFilterTutorial() = flowPrefs.getBoolean("shown_filter_tutorial", false)

@@ -54,6 +54,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import okhttp3.Headers
 import rikka.sui.Sui
 import rx.Observable
 import rx.android.schedulers.AndroidSchedulers
@@ -100,21 +101,23 @@ class SettingsAdvancedController : SettingsController() {
         }
 
         val pm = context.getSystemService(Context.POWER_SERVICE) as? PowerManager?
-        if (pm != null) preference {
-            key = "disable_batt_opt"
-            titleRes = R.string.disable_battery_optimization
-            summaryRes = R.string.disable_if_issues_with_updating
+        if (pm != null) {
+            preference {
+                key = "disable_batt_opt"
+                titleRes = R.string.disable_battery_optimization
+                summaryRes = R.string.disable_if_issues_with_updating
 
-            onClick {
-                val packageName: String = context.packageName
-                if (!pm.isIgnoringBatteryOptimizations(packageName)) {
-                    val intent = Intent().apply {
-                        action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
-                        data = "package:$packageName".toUri()
+                onClick {
+                    val packageName: String = context.packageName
+                    if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                        val intent = Intent().apply {
+                            action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+                            data = "package:$packageName".toUri()
+                        }
+                        startActivity(intent)
+                    } else {
+                        context.toast(R.string.battery_optimization_disabled)
                     }
-                    startActivity(intent)
-                } else {
-                    context.toast(R.string.battery_optimization_disabled)
                 }
             }
         }
@@ -272,6 +275,14 @@ class SettingsAdvancedController : SettingsController() {
                 titleRes = R.string.user_agent_string
 
                 onChange {
+                    it as String
+                    try {
+                        // OkHttp checks for valid values internally
+                        Headers.Builder().add("User-Agent", it)
+                    } catch (_: IllegalArgumentException) {
+                        context.toast(R.string.error_user_agent_string_invalid)
+                        return@onChange false
+                    }
                     activity?.toast(R.string.requires_app_restart)
                     true
                 }
@@ -388,12 +399,15 @@ class SettingsAdvancedController : SettingsController() {
             launchUI {
                 val activity = activity ?: return@launchUI
                 val cleanupString =
-                    if (foldersCleared == 0) activity.getString(R.string.no_folders_to_cleanup)
-                    else resources!!.getQuantityString(
-                        R.plurals.cleanup_done,
-                        foldersCleared,
-                        foldersCleared,
-                    )
+                    if (foldersCleared == 0) {
+                        activity.getString(R.string.no_folders_to_cleanup)
+                    } else {
+                        resources!!.getQuantityString(
+                            R.plurals.cleanup_done,
+                            foldersCleared,
+                            foldersCleared,
+                        )
+                    }
                 activity.toast(cleanupString, Toast.LENGTH_LONG)
             }
         }

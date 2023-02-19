@@ -129,7 +129,9 @@ class MangaDetailsPresenter(
             runBlocking { getChapters() }
             controller.updateChapters(this.chapters)
         }
-        setTrackItems()
+        presenterScope.launch {
+            setTrackItems()
+        }
         refreshTracking(false)
     }
 
@@ -233,6 +235,12 @@ class MangaDetailsPresenter(
         return chapterSort.getChaptersSorted(chapterList)
     }
 
+    fun getChapterUrl(chapter: Chapter): String? {
+        val source = source as? HttpSource ?: return null
+        val chapterUrl = try { source.getChapterUrl(chapter) } catch (_: Exception) { null }
+        return chapterUrl.takeIf { !it.isNullOrBlank() } ?: source.getChapterUrl(manga, chapter)
+    }
+
     private fun getScrollType(chapters: List<ChapterItem>) {
         scrollType = when {
             ChapterUtil.hasMultipleVolumes(chapters) -> MULTIPLE_VOLUMES
@@ -274,8 +282,9 @@ class MangaDetailsPresenter(
      * @param chapter the chapter to delete.
      */
     fun deleteChapter(chapter: ChapterItem) {
-        downloadManager.deleteChapters(listOf(chapter), manga, source)
+        downloadManager.deleteChapters(listOf(chapter), manga, source, true)
         this.chapters.find { it.id == chapter.id }?.apply {
+            if (chapter.chapter.bookmark && !preferences.removeBookmarkedChapters().get()) return@apply
             status = Download.State.QUEUE
             download = null
         }
@@ -297,6 +306,7 @@ class MangaDetailsPresenter(
         }
         chapters.forEach { chapter ->
             this.chapters.find { it.id == chapter.id }?.apply {
+                if (chapter.chapter.bookmark && !preferences.removeBookmarkedChapters().get() && !isEverything) return@apply
                 status = Download.State.QUEUE
                 download = null
             }
@@ -389,8 +399,10 @@ class MangaDetailsPresenter(
                 getChapters()
             }
             isLoading = false
-            if (chapterError == null) withContext(Dispatchers.Main) {
-                controller?.updateChapters(this@MangaDetailsPresenter.chapters)
+            if (chapterError == null) {
+                withContext(Dispatchers.Main) {
+                    controller?.updateChapters(this@MangaDetailsPresenter.chapters)
+                }
             }
             if (chapterError != null) {
                 withContext(Dispatchers.Main) {
@@ -399,10 +411,12 @@ class MangaDetailsPresenter(
                     )
                 }
                 return@launch
-            } else if (mangaError != null) withContext(Dispatchers.Main) {
-                controller?.showError(
-                    trimException(mangaError!!),
-                )
+            } else if (mangaError != null) {
+                withContext(Dispatchers.Main) {
+                    controller?.showError(
+                        trimException(mangaError!!),
+                    )
+                }
             }
         }
     }
@@ -441,9 +455,12 @@ class MangaDetailsPresenter(
         return (
             if (e !is SourceNotFoundException &&
                 e.message?.contains(": ") == true
-            ) e.message?.split(": ")?.drop(1)
-                ?.joinToString(": ")
-            else e.message
+            ) {
+                e.message?.split(": ")?.drop(1)
+                    ?.joinToString(": ")
+            } else {
+                e.message
+            }
             ) ?: controller?.view?.context?.getString(R.string.unknown_error) ?: ""
     }
 
@@ -869,18 +886,17 @@ class MangaDetailsPresenter(
 
     // Tracking
     private fun setTrackItems() {
-        presenterScope.launch {
-            trackList = loggedServices.map { service ->
-                TrackItem(tracks.find { it.sync_id == service.id }, service)
-            }
+        trackList = loggedServices.filter { service ->
+            if (service !is EnhancedTrackService) return@filter true
+            service.accept(source)
+        }.map { service ->
+            TrackItem(tracks.find { it.sync_id == service.id }, service)
         }
     }
 
     suspend fun fetchTracks() {
         tracks = withContext(Dispatchers.IO) { db.getTracks(manga).executeAsBlocking() }
-        trackList = loggedServices.map { service ->
-            TrackItem(tracks.find { it.sync_id == service.id }, service)
-        }
+        setTrackItems()
         withContext(Dispatchers.Main) { controller?.refreshTracking(trackList) }
     }
 
@@ -902,7 +918,9 @@ class MangaDetailsPresenter(
                                     syncChaptersWithTrackServiceTwoWay(db, chapters, trackItem, item.service)
                                 }
                                 trackItem
-                            } else item.track
+                            } else {
+                                item.track
+                            }
                         }
                     }
                 asyncList.awaitAll()
@@ -973,7 +991,9 @@ class MangaDetailsPresenter(
             if (binding != null) {
                 withContext(Dispatchers.IO) { db.insertTrack(binding).executeAsBlocking() }
                 fetchTracks()
-            } else trackRefreshDone()
+            } else {
+                trackRefreshDone()
+            }
         }
     }
 

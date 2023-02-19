@@ -31,9 +31,11 @@ import eu.kanade.tachiyomi.util.view.collapse
 import eu.kanade.tachiyomi.util.view.compatToolTipText
 import eu.kanade.tachiyomi.util.view.hide
 import eu.kanade.tachiyomi.util.view.inflate
+import eu.kanade.tachiyomi.util.view.isCollapsed
 import eu.kanade.tachiyomi.util.view.isExpanded
 import eu.kanade.tachiyomi.util.view.isHidden
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -69,6 +71,8 @@ class FilterBottomSheet @JvmOverloads constructor(context: Context, attrs: Attri
 
     private lateinit var completed: FilterTagGroup
 
+    private lateinit var bookmarked: FilterTagGroup
+
     private var tracked: FilterTagGroup? = null
 
     private var trackers: FilterTagGroup? = null
@@ -87,6 +91,7 @@ class FilterBottomSheet @JvmOverloads constructor(context: Context, attrs: Attri
         list.add(unread)
         list.add(downloaded)
         list.add(completed)
+        list.add(bookmarked)
         if (hasTracking) {
             tracked?.let { list.add(it) }
         }
@@ -145,9 +150,20 @@ class FilterBottomSheet @JvmOverloads constructor(context: Context, attrs: Attri
 
         sheetBehavior?.isGestureInsetBottomIgnored = true
 
-        val activeFilters = hasActiveFiltersFromPref()
+        val activeFilters = hasActiveFiltersFromPref() && !controller.isSubClass
         if (activeFilters && sheetBehavior.isHidden() && sheetBehavior?.skipCollapsed == false) {
             sheetBehavior?.collapse()
+            controller.viewScope.launchUI {
+                var hasScrolled = false
+                binding.filterScroll.setOnScrollChangeListener { _, _, _, _, _ ->
+                    hasScrolled = true
+                }
+                delay(2000)
+                if (sheetBehavior.isCollapsed() && !hasScrolled) {
+                    sheetBehavior?.hide()
+                }
+                binding.filterScroll.setOnScrollChangeListener(null)
+            }
         }
 
         post {
@@ -222,7 +238,7 @@ class FilterBottomSheet @JvmOverloads constructor(context: Context, attrs: Attri
     }
 
     fun setExpandText(allExpanded: Boolean?, animated: Boolean = true) {
-        binding.expandCategories.isVisible = allExpanded != null
+        binding.expandCategories.isVisible = controller?.isSubClass != true && allExpanded != null
         allExpanded ?: return
         binding.expandCategories.setText(
             if (!allExpanded) {
@@ -260,6 +276,7 @@ class FilterBottomSheet @JvmOverloads constructor(context: Context, attrs: Attri
             preferences.filterCompleted().get() > 0 ||
             preferences.filterTracked().get() > 0 ||
             preferences.filterMangaType().get() > 0 ||
+            preferences.filterBookmarked().get() > 0 ||
             FILTER_TRACKER.isNotEmpty()
     }
 
@@ -275,6 +292,9 @@ class FilterBottomSheet @JvmOverloads constructor(context: Context, attrs: Attri
 
         unread = inflate(R.layout.filter_tag_group) as FilterTagGroup
         unread.setup(this, R.string.unread, R.string.read)
+
+        bookmarked = inflate(R.layout.filter_tag_group) as FilterTagGroup
+        bookmarked.setup(this, R.string.bookmarked, R.string.not_bookmarked)
 
         if (hasTracking) {
             tracked = inflate(R.layout.filter_tag_group) as FilterTagGroup
@@ -294,19 +314,24 @@ class FilterBottomSheet @JvmOverloads constructor(context: Context, attrs: Attri
         withIOContext {
             val libraryManga = controller?.presenter?.allLibraryItems ?: return@withIOContext
             checked = true
-            val types = mutableListOf<Int>()
-            if (libraryManga.any { it.manga.seriesType(sourceManager = sourceManager) == Manga.TYPE_MANHWA }) types.add(R.string.manhwa)
-            if (libraryManga.any { it.manga.seriesType(sourceManager = sourceManager) == Manga.TYPE_MANHUA }) types.add(R.string.manhua)
-            if (libraryManga.any { it.manga.seriesType(sourceManager = sourceManager) == Manga.TYPE_COMIC }) types.add(R.string.comic)
+            var types = mutableSetOf<Int>()
+            libraryManga.forEach {
+                when (it.manga.seriesType(sourceManager = sourceManager)) {
+                    Manga.TYPE_MANHWA, Manga.TYPE_WEBTOON -> types.add(R.string.manhwa)
+                    Manga.TYPE_MANHUA -> types.add(R.string.manhua)
+                    Manga.TYPE_COMIC -> types.add(R.string.comic)
+                }
+                if (types.size == 3) return@forEach
+            }
+            val sortedTypes = arrayOf(R.string.manhwa, R.string.manhua, R.string.comic)
+            types = types.sortedBy { sortedTypes.indexOf(it) }.toMutableSet()
             if (types.isNotEmpty()) {
                 launchUI {
                     val mangaType = inflate(R.layout.filter_tag_group) as FilterTagGroup
                     mangaType.setup(
                         this@FilterBottomSheet,
                         R.string.manga,
-                        types.first(),
-                        types.getOrNull(1),
-                        types.getOrNull(2),
+                        *types.toTypedArray(),
                     )
                     this@FilterBottomSheet.mangaType = mangaType
                     reorderFilters()
@@ -357,10 +382,11 @@ class FilterBottomSheet @JvmOverloads constructor(context: Context, attrs: Attri
         withContext(Dispatchers.Main) {
             downloaded.setState(preferences.filterDownloaded())
             completed.setState(preferences.filterCompleted())
+            bookmarked.setState(preferences.filterBookmarked())
             val unreadP = preferences.filterUnread().get()
             if (unreadP <= 2) {
                 unread.state = unreadP - 1
-            } else if (unreadP >= 3) {
+            } else {
                 unreadProgress.state = unreadP - 3
             }
             tracked?.setState(preferences.filterTracked())
@@ -377,7 +403,7 @@ class FilterBottomSheet @JvmOverloads constructor(context: Context, attrs: Attri
                 filterItems.add(it)
             }
         }
-        listOfNotNull(unreadProgress, unread, downloaded, completed, mangaType, tracked)
+        listOfNotNull(unreadProgress, unread, downloaded, completed, mangaType, bookmarked, tracked)
             .forEach {
                 if (!filterItems.contains(it)) {
                     filterItems.add(it)
@@ -396,13 +422,14 @@ class FilterBottomSheet @JvmOverloads constructor(context: Context, attrs: Attri
             Filters.Downloaded -> downloaded
             Filters.Completed -> completed
             Filters.SeriesType -> mangaType
+            Filters.Bookmarked -> bookmarked
             Filters.Tracked -> if (hasTracking) tracked else null
             else -> null
         }
     }
 
     override fun onFilterClicked(view: FilterTagGroup, index: Int, updatePreference: Boolean) {
-        if (updatePreference) {
+        if (updatePreference && controller?.isSubClass != true) {
             when (view) {
                 trackers -> {
                     FILTER_TRACKER = view.nameOf(index) ?: ""
@@ -424,6 +451,7 @@ class FilterBottomSheet @JvmOverloads constructor(context: Context, attrs: Attri
                 }
                 downloaded -> preferences.filterDownloaded()
                 completed -> preferences.filterCompleted()
+                bookmarked -> preferences.filterBookmarked()
                 tracked -> preferences.filterTracked()
                 mangaType -> {
                     val newIndex = when (view.nameOf(index)) {
@@ -461,10 +489,11 @@ class FilterBottomSheet @JvmOverloads constructor(context: Context, attrs: Attri
         binding.groupBy.setIconResource(LibraryGroup.groupTypeDrawableRes(groupType))
     }
 
-    fun clearFilters() {
+    private fun clearFilters() {
         preferences.filterDownloaded().set(0)
         preferences.filterUnread().set(0)
         preferences.filterCompleted().set(0)
+        preferences.filterBookmarked().set(0)
         preferences.filterTracked().set(0)
         preferences.filterMangaType().set(0)
         FILTER_TRACKER = ""
@@ -510,7 +539,6 @@ class FilterBottomSheet @JvmOverloads constructor(context: Context, attrs: Attri
         const val STATE_EXCLUDE = 2
 
         var FILTER_TRACKER = ""
-            private set
     }
 
     enum class Filters(val value: Char, @StringRes val stringRes: Int) {
@@ -519,7 +547,9 @@ class FilterBottomSheet @JvmOverloads constructor(context: Context, attrs: Attri
         Downloaded('d', R.string.downloaded),
         Completed('c', R.string.status),
         SeriesType('m', R.string.series_type),
-        Tracked('t', R.string.tracked);
+        Bookmarked('b', R.string.bookmarked),
+        Tracked('t', R.string.tracked),
+        ;
 
         companion object {
             val DEFAULT_ORDER = listOf(
@@ -528,6 +558,7 @@ class FilterBottomSheet @JvmOverloads constructor(context: Context, attrs: Attri
                 Downloaded,
                 Completed,
                 SeriesType,
+                Bookmarked,
                 Tracked,
             ).joinToString("") { it.value.toString() }
 

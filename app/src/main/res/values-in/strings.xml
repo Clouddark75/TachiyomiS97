@@ -33,19 +33,19 @@
     <string name="pause">Hentikan sementara</string>
     <string name="clear">Hapus</string>
     <string name="close">Tutup</string>
-    <string name="retry">Lanjut</string>
+    <string name="retry">Coba lagi</string>
     <string name="remove">Hapus</string>
     <string name="resume">Lanjut</string>
     <string name="open_in_browser">Buka di browser</string>
     <string name="display">Tampilan</string>
     <string name="list">Daftar</string>
     <string name="cancel">Batal</string>
-    <string name="sort">Sortir</string>
+    <string name="sort">Urutan</string>
     <string name="install">Pasang</string>
     <string name="share">Bagikan</string>
     <string name="save">Simpan</string>
     <string name="reset">Atur ulang</string>
-    <string name="undo">Kembalikan</string>
+    <string name="undo">Kembali</string>
     <string name="create">Buat</string>
     <string name="compact_grid">Grid Rapat</string>
     <string name="restore">Pulihkan</string>
@@ -160,7 +160,7 @@
     <string name="username">Nama pengguna</string>
     <string name="password">Kata sandi</string>
     <string name="successfully_logged_in">Login berhasil</string>
-    <string name="unknown_error">Terdapat suatu kesalahan</string>
+    <string name="unknown_error">Kesalahan tidak diketahui</string>
     <string name="no_more_results">Tidak ada hasil lainnya</string>
     <string name="local_source">Sumber lokal</string>
     <string name="description">Deskripsi</string>
@@ -517,7 +517,7 @@
     <string name="new_category">Tambah kategori baru</string>
     <string name="category">Kategori</string>
     <plurals name="chapters_plural">
-        <item quantity="other">%1$d bab</item>
+        <item quantity="other">%1$s bab</item>
     </plurals>
     <string name="move_x_to">Pindah %1$s ke…</string>
     <string name="add_x_to">Tambah %1$s ke …</string>
@@ -559,7 +559,7 @@
     <string name="migrate_">Migrasi %1$s</string>
     <string name="menu">menu</string>
     <string name="stop_migrating">Hentikan migrasi\?</string>
-    <string name="sort_and_filter">Sortir &amp; Saring</string>
+    <string name="sort_and_filter">Urut &amp; Saring</string>
     <string name="select_sources">Pilih sumber</string>
     <string name="selection">Pilihan</string>
     <plurals name="manga_migrated">
@@ -587,7 +587,7 @@
     <string name="kindlish_nav">semacam Kindle</string>
     <string name="select_none">Pilih tidak ada</string>
     <string name="search_suggestions">Saran pencarian</string>
-    <string name="search_">Mencari %1$s</string>
+    <string name="search_">Cari %1$s</string>
     <string name="group_chapters_together">Kelompokkan bab bersama</string>
     <string name="show_updated_time">Tampilkan waktu pembaruan</string>
     <string name="actions">Tindakan</string>
@@ -854,7 +854,7 @@
     <string name="name">Nama</string>
     <string name="getting_started_guide">Panduan awal mulai</string>
     <plurals name="missing_chapters_warning">
-        <item quantity="other">Melewati %d bab, entah sumber kehilangan mereka atau mungkin karena sudah difilter</item>
+        <item quantity="other">Melewati %d bab, entah mungkin sumber kehilangan bab tersebut atau karena sudah difilter</item>
     </plurals>
     <string name="help_translate">Bantu terjemahkan</string>
     <string name="helpful_translation_links">Tautan terjemahan yang membantu</string>
@@ -969,7 +969,7 @@
     <string name="download_notifier_split_page_not_found">Halaman %d tidak ditemukan saat dipisah</string>
     <string name="download_notifier_split_failed">Tidak bisa memisah gambar yang telah diunduh</string>
     <string name="split_tall_images">Membagi gambar panjang secara otomatis</string>
-    <string name="split_tall_images_summary">Meningkatkan kinerja pembaca dengan memisahkan gambar panjang yang diunduh.</string>
+    <string name="split_tall_images_summary">Meningkatkan kinerja pembaca</string>
     <string name="reading_list">Daftar Bacaan</string>
     <string name="wish_list">Daftar Keinginan</string>
     <string name="complete_list">Daftar Selesai</string>
@@ -987,4 +987,49 @@
     <string name="clear_db_exclude_read">Simpan manga dengan membaca chapter</string>
     <string name="auto_download_while_reading">Unduh otomatis ketika sedang membaca</string>
     <string name="downloaded_chapters">Diunduh</string>
+    <string name="titles_in_library">Judul-judul di perpustakaan</string>
+    <string name="chapters_read">Bab yang sudah terbaca</string>
+    <string name="statistics">Statistik</string>
+    <string name="tracked_titles">Judul yang dilacak</string>
+    <string name="tags">Tag</string>
+    <string name="length">Panjang</string>
+    <plurals name="_series_types">
+        <item quantity="other">%d jenis seri</item>
+    </plurals>
+    <string name="statistics_details">Detail statistik</string>
+    <string name="stat">Status</string>
+    <string name="stats">Statusnya</string>
+    <string name="no_data_for_filters">Tidak ada data yang ditemukan untuk filter Anda saat ini</string>
+    <string name="start_year">Mulai tahun</string>
+    <string name="local_titles">Judul lokal</string>
+    <string name="titles_in_global_update">Judul dalam pembaruan global</string>
+    <string name="trackers">Pelacak</string>
+    <string name="read_duration">Durasi membaca</string>
+    <string name="manga_status_distribution">Distribusi status</string>
+    <string name="count">Hitungan</string>
+    <string name="manga_score_distribution">Distribusi skor</string>
+    <string name="view_detailed_statistics">Lihat statistik terperinci</string>
+    <string name="not_rated">Tidak dinilai</string>
+    <string name="source">Sumber</string>
+    <string name="tracker">Pelacak</string>
+    <plurals name="_sources">
+        <item quantity="other">%d sumber</item>
+    </plurals>
+    <plurals name="_statuses">
+        <item quantity="other">%d status</item>
+    </plurals>
+    <plurals name="_languages">
+        <item quantity="other">%d bahasa</item>
+    </plurals>
+    <string name="read_duration_info">Waktu yang dihabiskan di pembaca, berdasarkan sejarah bab</string>
+    <string name="skipped_reason_not_always_update">Dilewati karena seri ini tidak memerlukan pembaruan</string>
+    <string name="error_user_agent_string_invalid">String agen pengguna tidak valid</string>
+    <string name="popular">Populer</string>
+    <string name="skip_dupe_chapters">Melewati bab terduplikasi</string>
+    <string name="allow_deleting_bookmarked_chapters">Hapus bab yang ditandai</string>
+    <string name="appwidget_updates_description">Lihat entri pustaka Anda yang baru saja diperbarui</string>
+    <string name="appwidget_unavailable_locked">Widget tidak tersedia saat kunci aplikasi diaktifkan</string>
+    <string name="mean_tracking_score">Rata-rata skor pelacakan</string>
+    <string name="failed_to_update_">Gagal memperbarui %1$s</string>
+    <string name="hide_in_library_items">semua yang di sembunyikan sudah ada di pustaka</string>
 </resources>

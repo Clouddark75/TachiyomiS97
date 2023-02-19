@@ -625,7 +625,7 @@
     <string name="no_recent_read_updated_manga">最近読んだり更新したりしたマンガはありません</string>
     <string name="no_recent_chapters">新しい章はありません</string>
     <plurals name="chapters_plural">
-        <item quantity="other">%1$d章</item>
+        <item quantity="other">%1$s章</item>
     </plurals>
     <string name="auto_refresh_covers_summary">ライブラリを更新する時に、ライブラリのカバーも更新する</string>
     <string name="group_chapters_together">章をグループ化する</string>
@@ -968,7 +968,7 @@
     <string name="download_notifier_split_page_not_found">分割時にページ%dが見つかりませんでした</string>
     <string name="download_notifier_split_failed">ダウンロードした画像を分割できませんでした</string>
     <string name="split_tall_images">長い画像を自動で分割</string>
-    <string name="split_tall_images_summary">ダウンロードした長い画像を自動で分割してビューアのパフォーマンスを改善します。</string>
+    <string name="split_tall_images_summary">ビューアのパフォーマンスを向上させます</string>
     <string name="reading_list">読書中リスト</string>
     <string name="wish_list">読みたいリスト</string>
     <string name="complete_list">読了リスト</string>
@@ -986,4 +986,47 @@
     <string name="all_read_manga">全ての既読マンガ</string>
     <string name="auto_download_while_reading">読書中に自動でダウンロード</string>
     <string name="downloaded_chapters">ダウンロードした章の数</string>
+    <string name="statistics">統計情報</string>
+    <string name="statistics_details">統計情報詳細</string>
+    <string name="titles_in_library">書籍タイトル</string>
+    <string name="chapters_read">章を読む</string>
+    <string name="tracked_titles">追跡されたタイトル</string>
+    <string name="tags">タグ</string>
+    <string name="titles_in_global_update">グローバルアップデート対象タイトル</string>
+    <string name="local_titles">ローカルタイトル</string>
+    <string name="stats">統計</string>
+    <string name="stat">統計</string>
+    <string name="not_rated">未評価</string>
+    <string name="source">ソース</string>
+    <string name="trackers">トラッカー</string>
+    <string name="read_duration">読書時間</string>
+    <string name="manga_status_distribution">ステータス配布</string>
+    <string name="manga_score_distribution">得点分布</string>
+    <string name="view_detailed_statistics">詳細な統計を表示</string>
+    <string name="count">カウント</string>
+    <string name="length">長さ</string>
+    <string name="tracker">トラッカー</string>
+    <string name="start_year">開始年</string>
+    <string name="no_data_for_filters">現在のフィルターのデータが見つかりません</string>
+    <plurals name="_series_types">
+        <item quantity="other">%d件のシリーズ タイプ</item>
+    </plurals>
+    <plurals name="_sources">
+        <item quantity="other">%d件のソース</item>
+    </plurals>
+    <plurals name="_statuses">
+        <item quantity="other">%d件のステータス</item>
+    </plurals>
+    <plurals name="_languages">
+        <item quantity="other">%d件の言語</item>
+    </plurals>
+    <string name="read_duration_info">章の履歴に基づいた、ビューアで滞在した時間</string>
+    <string name="skipped_reason_not_always_update">シリーズは更新を必要としないため、スキップされました</string>
+    <string name="error_user_agent_string_invalid">ユーザー エージェント文字列が無効です</string>
+    <string name="popular">人気</string>
+    <string name="skip_dupe_chapters">重複の章をスキップ</string>
+    <string name="hide_in_library_items">ライブラリにある項目を非表示</string>
+    <string name="allow_deleting_bookmarked_chapters">ブックマークした章の削除を許可</string>
+    <string name="appwidget_updates_description">最近更新されたライブラリの項目を見る</string>
+    <string name="appwidget_unavailable_locked">アプリロックがONの時、ウィジェットは利用できません</string>
 </resources>

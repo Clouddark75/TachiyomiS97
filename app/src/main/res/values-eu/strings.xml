@@ -879,8 +879,8 @@
     <string name="open_log">Ireki erregistroa</string>
     <string name="top">Goian</string>
     <plurals name="chapters_plural">
-        <item quantity="one">%1$d kapitulu</item>
-        <item quantity="other">%1$d kapituluak</item>
+        <item quantity="one">%1$s kapitulu</item>
+        <item quantity="other">%1$s kapituluak</item>
     </plurals>
     <plurals name="pages_left">
         <item quantity="one">Orri %1$d geratzen da</item>
@@ -944,4 +944,10 @@
     <string name="pref_lowest">Baxuena</string>
     <string name="webtoon_side_padding_5">%5</string>
     <string name="downloaded_chapters">Deskargatutako kapituluak</string>
+    <string name="tap_zones">Nabigazio-diseinua</string>
+    <string name="pref_update_only_non_completed">Argitalpen bukatua al da</string>
+    <string name="pref_update_only_started">Kapitulurik irakurri gabe</string>
+    <string name="pref_library_update_manga_restriction">Saltatu eguneraketak</string>
+    <string name="pref_update_only_completely_read">Irakurri gabeko kapituluak ditu</string>
+    <string name="allow_deleting_bookmarked_chapters">Baimendu laster-markadun kapituluak ezabatzea</string>
 </resources>

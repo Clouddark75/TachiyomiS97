@@ -482,8 +482,8 @@
     <string name="move_x_to">Mou %1$s a…</string>
     <string name="add_x_to">Afegeix %1$s a…</string>
     <plurals name="chapters_plural">
-        <item quantity="one">%1$d capítol</item>
-        <item quantity="other">%1$d capítols</item>
+        <item quantity="one">%1$s capítol</item>
+        <item quantity="other">%1$s capítols</item>
     </plurals>
     <string name="all_files_permission_required">Calen permisos de fitxers</string>
     <string name="category_deleted">Categoria suprimida</string>
@@ -561,7 +561,7 @@
     <string name="channel_skipped">Omesa</string>
     <string name="pref_library_update_manga_restriction">Omet les actualitzacions dels títols</string>
     <string name="pref_update_only_completely_read">Amb capítols no llegits</string>
-    <string name="pref_update_only_non_completed">Amb l\'estat «Completada»</string>
+    <string name="pref_update_only_non_completed">Amb l\'estat «Completat»</string>
     <string name="pref_update_only_started">Que no s\'hagin començat</string>
     <string name="pref_clear_webview_data">Neteja les dades del WebView</string>
     <string name="webview_data_deleted">S\'han netejat les dades del WebView</string>
@@ -605,8 +605,8 @@
     <string name="pref_lowest">La més baixa</string>
     <string name="download_notifier_split_page_not_found">No s\'ha trobat la pàgina %d en dividir</string>
     <string name="download_notifier_split_failed">No s\'ha pogut dividir la imatge baixada</string>
-    <string name="split_tall_images">Divideix automàticament les imatges altes</string>
-    <string name="split_tall_images_summary">Millora el rendiment del lector dividint les imatges baixades massa altes.</string>
+    <string name="split_tall_images">Divideix les imatges altes</string>
+    <string name="split_tall_images_summary">Millora el rendiment del lector</string>
     <string name="reading_list">Llista de lectura</string>
     <string name="wish_list">Llista de desitjos</string>
     <string name="complete_list">Llista de completats</string>
@@ -619,4 +619,31 @@
     <string name="user_agent_string">Cadena d\'agent d\'usuari per defecte</string>
     <string name="loader_rar5_error">El format RARv5 no està suportat</string>
     <string name="downloaded_chapters">Capítols baixats</string>
+    <string name="auto_download_while_reading">Baixa automàticament mentre es llegeix</string>
+    <string name="download_ahead">Baixa per avançat</string>
+    <string name="download_ahead_info">Només funciona en elements de la biblioteca i si el capítol actual i el següent ja estan baixats</string>
+    <plurals name="next_unread_chapters">
+        <item quantity="one">El següent capítol no llegit</item>
+        <item quantity="other">Els següents %d capítols no llegits</item>
+    </plurals>
+    <string name="external_storage_download_notice">TachiyomiJ2K requereix l\'accés a tots els fitxers per tal de descarregar capítols. Toqueu aquí i habiliteu \"Permet l\'accés per gestionar tots els fitxers.\"</string>
+    <string name="could_not_install_update">No s\'ha pogut instal·lar l\'actualització</string>
+    <string name="release_page">Pàgina de llançament</string>
+    <string name="your_library">La teva biblioteca</string>
+    <string name="new_beta_version_available">Nova versió beta disponible!</string>
+    <string name="update_completed">Actualització completada</string>
+    <string name="external_storage_permission_notice">TachiyomiJ2K requereix l\'accés a tots els fitxers d\'Android 11 per tal de descarregar capítols, crear còpies de seguretat automàtiques i llegir manga localment.
+\n
+\nA la següent pantalla habiliteu \"Permet l\'accés per gestionar tots els fitxers.\"</string>
+    <string name="skipped_reason_not_always_update">S\'ha omès perquè no cal actualitzar la sèrie</string>
+    <string name="error_user_agent_string_invalid">La cadena d\'agent d\'usuari no és vàlida</string>
+    <string name="read_duration">Temps de lectura</string>
+    <string name="statistics">Estadístiques</string>
+    <string name="skip_dupe_chapters">Omet els capítols duplicats</string>
+    <string name="appwidget_updates_description">Vegeu els elements de la biblioteca actualitzats recentment</string>
+    <string name="appwidget_unavailable_locked">El widget no està disponible quan hi ha activat el blocatge de l\'aplicació</string>
+    <string name="popular">Populars</string>
+    <string name="hide_in_library_items">Amaga els elements que ja són a la biblioteca</string>
+    <string name="allow_deleting_bookmarked_chapters">Permet la supressió dels capítols marcats</string>
+    <string name="trackers">Seguidors</string>
 </resources>

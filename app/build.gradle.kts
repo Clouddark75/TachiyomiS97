@@ -27,7 +27,7 @@ fun runCommand(command: String): String {
     return String(byteOut.toByteArray()).trim()
 }
 
-val supportedAbis = setOf("armeabi-v7a", "arm64-v8a", "x86")
+val supportedAbis = setOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
 
 android {
     compileSdk = AndroidVersions.compileSdk
@@ -90,6 +90,12 @@ android {
 
     buildFeatures {
         viewBinding = true
+        compose = true
+
+        // Disable some unused things
+        aidl = false
+        renderScript = false
+        shaders = false
     }
 
     flavorDimensions.add("default")
@@ -110,6 +116,10 @@ android {
         checkReleaseBuilds = false
     }
 
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.4.2"
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -121,6 +131,20 @@ android {
 }
 
 dependencies {
+    // Compose
+    implementation("androidx.activity:activity-compose:1.6.1")
+    implementation("androidx.compose.foundation:foundation:1.3.1")
+    implementation("androidx.compose.animation:animation:1.3.3")
+    implementation("androidx.compose.ui:ui:1.3.3")
+    implementation("androidx.compose.material:material:1.3.1")
+    implementation("androidx.compose.material3:material3:1.0.1")
+    implementation("com.google.android.material:compose-theme-adapter-3:1.1.1")
+    implementation("androidx.compose.material:material-icons-extended:1.3.1")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.3.3")
+    debugImplementation("androidx.compose.ui:ui-tooling:1.3.3")
+    implementation("com.google.accompanist:accompanist-webview:0.28.0")
+    implementation("androidx.glance:glance-appwidget:1.0.0-alpha03")
+
     // Modified dependencies
     implementation("com.github.jays2kings:subsampling-scale-image-view:756849e") {
         exclude(module = "image-decoder")
@@ -128,19 +152,20 @@ dependencies {
     implementation("com.github.tachiyomiorg:image-decoder:7481a4a")
 
     // Android X libraries
-    implementation("androidx.appcompat:appcompat:1.6.0-beta01")
+    implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.cardview:cardview:1.0.0")
-    implementation("com.google.android.material:material:1.7.0-rc01")
-    implementation("androidx.webkit:webkit:1.5.0")
+    implementation("com.google.android.material:material:1.8.0")
+    implementation("androidx.webkit:webkit:1.6.0")
     implementation("androidx.recyclerview:recyclerview:1.2.1")
     implementation("androidx.preference:preference:1.2.0")
-    implementation("androidx.annotation:annotation:1.4.0")
-    implementation("androidx.browser:browser:1.4.0")
+    implementation("androidx.annotation:annotation:1.5.0")
+    implementation("androidx.browser:browser:1.5.0")
     implementation("androidx.biometric:biometric:1.1.0")
     implementation("androidx.palette:palette:1.0.0")
-    implementation("androidx.core:core-ktx:1.8.0")
+    implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1")
     implementation("com.google.android.flexbox:flexbox:3.0.0")
+    implementation("androidx.window:window:1.0.0")
 
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
 
@@ -149,7 +174,7 @@ dependencies {
     implementation("com.google.firebase:firebase-core:21.1.0")
     implementation("com.google.firebase:firebase-analytics-ktx:21.1.0")
 
-    val lifecycleVersion = "2.4.0-rc01"
+    val lifecycleVersion = "2.5.1"
     kapt("androidx.lifecycle:lifecycle-compiler:$lifecycleVersion")
     implementation("androidx.lifecycle:lifecycle-process:$lifecycleVersion")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion")
@@ -164,11 +189,11 @@ dependencies {
     implementation("com.fredporciuncula:flow-preferences:1.6.0")
 
     // Network client
-    val okhttpVersion = "4.10.0"
+    val okhttpVersion = "5.0.0-alpha.11"
     implementation("com.squareup.okhttp3:okhttp:$okhttpVersion")
     implementation("com.squareup.okhttp3:logging-interceptor:$okhttpVersion")
     implementation("com.squareup.okhttp3:okhttp-dnsoverhttps:$okhttpVersion")
-    implementation("com.squareup.okio:okio:3.0.0")
+    implementation("com.squareup.okio:okio:3.3.0")
 
     // Chucker
     val chuckerVersion = "3.5.2"
@@ -179,9 +204,10 @@ dependencies {
     implementation(kotlin("reflect", version = AndroidVersions.kotlin))
 
     // JSON
-    val kotlinSerialization =  "1.3.3"
+    val kotlinSerialization =  "1.4.0"
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${kotlinSerialization}")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:${kotlinSerialization}")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-okio:${kotlinSerialization}")
 
     // JavaScript engine
     implementation("app.cash.quickjs:quickjs-android:0.9.2")
@@ -192,7 +218,7 @@ dependencies {
     implementation("com.github.junrar:junrar:7.5.0")
 
     // HTML parser
-    implementation("org.jsoup:jsoup:1.14.3")
+    implementation("org.jsoup:jsoup:1.15.3")
 
     // Job scheduling
     implementation("androidx.work:work-runtime-ktx:2.6.0")

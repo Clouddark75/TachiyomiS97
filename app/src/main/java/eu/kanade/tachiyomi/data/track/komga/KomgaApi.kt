@@ -4,7 +4,7 @@ import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import eu.kanade.tachiyomi.network.GET
-import eu.kanade.tachiyomi.network.await
+import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.network.parseAs
 import eu.kanade.tachiyomi.util.system.withIOContext
 import kotlinx.serialization.encodeToString
@@ -27,21 +27,24 @@ class KomgaApi(private val client: OkHttpClient) {
             try {
                 val track = if (url.contains(READLIST_API)) {
                     client.newCall(GET(url))
-                        .await()
+                        .awaitSuccess()
                         .parseAs<ReadListDto>()
                         .toTrack()
                 } else {
                     client.newCall(GET(url))
-                        .await()
+                        .awaitSuccess()
                         .parseAs<SeriesDto>()
                         .toTrack()
                 }
 
                 val progress = client
                     .newCall(GET("${url.replace("/api/v1/series/", "/api/v2/series/")}/read-progress/tachiyomi"))
-                    .await().let {
-                        if (url.contains("/api/v1/series/")) it.parseAs<ReadProgressV2Dto>()
-                        else it.parseAs<ReadProgressDto>().toV2()
+                    .awaitSuccess().let {
+                        if (url.contains("/api/v1/series/")) {
+                            it.parseAs<ReadProgressV2Dto>()
+                        } else {
+                            it.parseAs<ReadProgressDto>().toV2()
+                        }
                     }
 
                 track.apply {
@@ -73,7 +76,7 @@ class KomgaApi(private val client: OkHttpClient) {
                 .put(payload.toRequestBody("application/json".toMediaType()))
                 .build(),
         )
-            .await()
+            .awaitSuccess()
         return getTrackSearch(track.tracking_url).apply {
             id = track.id
             manga_id = track.manga_id

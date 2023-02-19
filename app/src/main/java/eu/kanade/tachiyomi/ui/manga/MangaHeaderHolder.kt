@@ -157,8 +157,11 @@ class MangaHeaderHolder(
             applyBlur()
             mangaCover.setOnClickListener { adapter.delegate.zoomImageFromThumb(coverCard) }
             trackButton.setOnClickListener { adapter.delegate.showTrackingSheet() }
-            if (startExpanded) expandDesc()
-            else collapseDesc()
+            if (startExpanded) {
+                expandDesc()
+            } else {
+                collapseDesc()
+            }
             if (isTablet) {
                 chapterLayout.isVisible = false
                 expandDesc()
@@ -325,8 +328,11 @@ class MangaHeaderHolder(
                     canCollapse = false
                 }
             }
-            if (adapter.hasFilter()) collapse()
-            else expand()
+            if (adapter.hasFilter()) {
+                collapse()
+            } else {
+                expand()
+            }
         }
         binding.mangaSummaryLabel.text = itemView.context.getString(
             R.string.about_this_,
@@ -361,8 +367,11 @@ class MangaHeaderHolder(
         with(binding.trackButton) {
             isVisible = presenter.hasTrackers()
             text = itemView.context.getString(
-                if (tracked) R.string.tracked
-                else R.string.tracking,
+                if (tracked) {
+                    R.string.tracked
+                } else {
+                    R.string.tracking
+                },
             )
 
             icon = ContextCompat.getDrawable(
@@ -379,15 +388,22 @@ class MangaHeaderHolder(
             isEnabled = (nextChapter != null)
             text = if (nextChapter != null) {
                 val number = adapter.decimalFormat.format(nextChapter.chapter_number.toDouble())
-                if (nextChapter.chapter_number > 0) resources.getString(
-                    if (nextChapter.last_page_read > 0) R.string.continue_reading_chapter_
-                    else R.string.start_reading_chapter_,
-                    number,
-                )
-                else {
+                if (nextChapter.chapter_number > 0) {
                     resources.getString(
-                        if (nextChapter.last_page_read > 0) R.string.continue_reading
-                        else R.string.start_reading,
+                        if (nextChapter.last_page_read > 0) {
+                            R.string.continue_reading_chapter_
+                        } else {
+                            R.string.start_reading_chapter_
+                        },
+                        number,
+                    )
+                } else {
+                    resources.getString(
+                        if (nextChapter.last_page_read > 0) {
+                            R.string.continue_reading
+                        } else {
+                            R.string.start_reading
+                        },
                     )
                 }
             } else {
@@ -421,13 +437,7 @@ class MangaHeaderHolder(
                 .filterNot { it == "all" }
 
             text = buildSpannedString {
-                append(
-                    if (enabledLanguages.size > 1 && presenter.extension?.lang == "all") {
-                        presenter.source.toString()
-                    } else {
-                        presenter.source.name
-                    },
-                )
+                append(presenter.source.nameBasedOnEnabledLanguages(enabledLanguages.size > 1))
                 if (presenter.source is SourceManager.StubSource &&
                     presenter.source.name != presenter.source.id.toString()
                 ) {
@@ -512,7 +522,7 @@ class MangaHeaderHolder(
                     chip.setTextColor(textColor)
                     chip.text = genreText
                     chip.setOnClickListener {
-                        adapter.delegate.showFloatingActionMode(chip, searchSource = true)
+                        adapter.delegate.showFloatingActionMode(chip, isTag = true)
                     }
                     chip.setOnLongClickListener {
                         adapter.delegate.copyToClipboard(genreText, genreText)
@@ -617,14 +627,21 @@ class MangaHeaderHolder(
         val tracked = presenter.isTracked()
         with(binding.trackButton) {
             text = itemView.context.getString(
-                if (tracked) R.string.tracked
-                else R.string.tracking,
+                if (tracked) {
+                    R.string.tracked
+                } else {
+                    R.string.tracking
+                },
             )
 
             icon = ContextCompat.getDrawable(
                 itemView.context,
-                if (tracked) R.drawable
-                    .ic_check_24dp else R.drawable.ic_sync_24dp,
+                if (tracked) {
+                    R.drawable
+                        .ic_check_24dp
+                } else {
+                    R.drawable.ic_sync_24dp
+                },
             )
             checked(tracked)
         }
@@ -686,8 +703,9 @@ class MangaHeaderHolder(
     fun expand() {
         binding ?: return
         binding.subItemGroup.isVisible = true
-        if (!showMoreButton) binding.moreButtonGroup.isVisible = false
-        else {
+        if (!showMoreButton) {
+            binding.moreButtonGroup.isVisible = false
+        } else {
             if (binding.mangaSummary.maxLines != Integer.MAX_VALUE) {
                 binding.moreButtonGroup.isVisible = !isTablet
             } else {

@@ -19,6 +19,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.ColorInt
 import androidx.annotation.FloatRange
@@ -26,6 +27,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.PopupMenu
 import androidx.appcompat.widget.SearchView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsCompat.Type.systemBars
@@ -66,8 +68,10 @@ import eu.kanade.tachiyomi.ui.base.SmallToolbarInterface
 import eu.kanade.tachiyomi.ui.base.controller.BaseCoroutineController
 import eu.kanade.tachiyomi.ui.base.controller.DialogController
 import eu.kanade.tachiyomi.ui.base.holder.BaseFlexibleViewHolder
+import eu.kanade.tachiyomi.ui.library.FilteredLibraryController
 import eu.kanade.tachiyomi.ui.library.LibraryController
 import eu.kanade.tachiyomi.ui.main.FloatingSearchInterface
+import eu.kanade.tachiyomi.ui.main.HingeSupportedController
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.main.SearchActivity
 import eu.kanade.tachiyomi.ui.manga.chapter.ChapterHolder
@@ -104,6 +108,7 @@ import eu.kanade.tachiyomi.util.system.rootWindowInsetsCompat
 import eu.kanade.tachiyomi.util.system.setCustomTitleAndMessage
 import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.util.view.activityBinding
+import eu.kanade.tachiyomi.util.view.findChild
 import eu.kanade.tachiyomi.util.view.getText
 import eu.kanade.tachiyomi.util.view.isControllerVisible
 import eu.kanade.tachiyomi.util.view.previousController
@@ -135,6 +140,7 @@ class MangaDetailsController :
     ActionMode.Callback,
     MangaDetailsAdapter.MangaDetailsInterface,
     SmallToolbarInterface,
+    HingeSupportedController,
     FlexibleAdapter.OnItemMoveListener {
 
     constructor(
@@ -166,11 +172,13 @@ class MangaDetailsController :
     constructor(bundle: Bundle) : this(bundle.getLong(MANGA_EXTRA)) {
         val notificationId = bundle.getInt("notificationId", -1)
         val context = applicationContext ?: return
-        if (notificationId > -1) NotificationReceiver.dismissNotification(
-            context,
-            notificationId,
-            bundle.getInt("groupId", 0),
-        )
+        if (notificationId > -1) {
+            NotificationReceiver.dismissNotification(
+                context,
+                notificationId,
+                bundle.getInt("groupId", 0),
+            )
+        }
     }
 
     private var manga: Manga? = null
@@ -365,10 +373,35 @@ class MangaDetailsController :
         binding.tabletRecycler.isVisible = isTablet
         binding.tabletDivider.isVisible = isTablet
         if (isTablet) {
+            binding.tabletRecycler.itemAnimator = null
             binding.recycler.updateLayoutParams<ViewGroup.LayoutParams> { width = 0 }
             tabletAdapter = MangaDetailsAdapter(this)
             binding.tabletRecycler.adapter = tabletAdapter
             binding.tabletRecycler.layoutManager = LinearLayoutManager(view.context)
+            updateForHinge()
+        }
+    }
+
+    override fun updateForHinge() {
+        if (isTablet) {
+            val hingeGapSize = (activity as? MainActivity)?.hingeGapSize?.takeIf { it > 0 }
+            if (hingeGapSize != null) {
+                binding.tabletDivider.updateLayoutParams<ViewGroup.LayoutParams> {
+                    width = hingeGapSize
+                }
+                binding.tabletRecycler.updateLayoutParams<ConstraintLayout.LayoutParams> {
+                    matchConstraintPercentWidth = 1f
+                    width = 0
+                    matchConstraintDefaultWidth =
+                        ConstraintLayout.LayoutParams.MATCH_CONSTRAINT_SPREAD
+                }
+                val swipeCircle = binding.swipeRefresh.findChild<ImageView>()
+                swipeCircle?.translationX =
+                    (activity!!.window.decorView.width / 2 + hingeGapSize) /
+                    2f
+            } else {
+                binding.tabletRecycler.updateLayoutParams<ConstraintLayout.LayoutParams> { matchConstraintPercentWidth = 0.4f }
+            }
         }
     }
 
@@ -381,6 +414,7 @@ class MangaDetailsController :
     }
 
     /** Set adapter, insets, and scroll listener for recycler view */
+    @SuppressLint("ClickableViewAccessibility")
     private fun setRecycler(view: View) {
         adapter = MangaDetailsAdapter(this)
 
@@ -438,6 +472,12 @@ class MangaDetailsController :
         binding.touchView.setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
                 finishFloatingActionMode()
+                val hingeGapSize = (activity as? MainActivity)?.hingeGapSize?.takeIf { it > 0 }
+                if (hingeGapSize != null) {
+                    val swipeCircle = binding.swipeRefresh.findChild<ImageView>()
+                    swipeCircle?.translationX = (binding.root.width / 2 + hingeGapSize) / 2 *
+                        (if (event.x > binding.root.width / 2) 1 else -1).toFloat()
+                }
             }
             false
         }
@@ -698,7 +738,9 @@ class MangaDetailsController :
                                         (chapterNames.size - (4 - 1)),
                                         (chapterNames.size - (4 - 1)),
                                     )
-                            } else chapterNames.joinToString(", "),
+                            } else {
+                                chapterNames.joinToString(", ")
+                            },
                         ),
                     )
                     .setPositiveButton(R.string.delete) { dialog, _ ->
@@ -734,8 +776,11 @@ class MangaDetailsController :
     }
 
     private fun getHeader(): MangaHeaderHolder? {
-        return if (isTablet) binding.tabletRecycler.findViewHolderForAdapterPosition(0) as? MangaHeaderHolder
-        else binding.recycler.findViewHolderForAdapterPosition(0) as? MangaHeaderHolder
+        return if (isTablet) {
+            binding.tabletRecycler.findViewHolderForAdapterPosition(0) as? MangaHeaderHolder
+        } else {
+            binding.recycler.findViewHolderForAdapterPosition(0) as? MangaHeaderHolder
+        }
     }
 
     fun updateHeader() {
@@ -826,7 +871,7 @@ class MangaDetailsController :
         val adapter = adapter ?: return
         val item = (adapter.getItem(position) as? ChapterItem) ?: return
         val descending = presenter.sortDescending()
-        val items = listOf(
+        var items = mutableListOf(
             MaterialMenuSheet.MenuSheetItem(
                 0,
                 if (descending) R.drawable.ic_eye_down_24dp else R.drawable.ic_eye_up_24dp,
@@ -848,33 +893,27 @@ class MangaDetailsController :
                 R.string.mark_range_as_unread,
             ),
         )
+        if (presenter.getChapterUrl(item.chapter) != null) {
+            items.add(
+                0,
+                MaterialMenuSheet.MenuSheetItem(
+                    4,
+                    R.drawable.ic_open_in_webview_24dp,
+                    R.string.open_in_webview,
+                ),
+            )
+        }
         val menuSheet = MaterialMenuSheet(activity!!, items, item.name) { _, itemPos ->
             when (itemPos) {
                 0 -> markPreviousAs(item, true)
                 1 -> markPreviousAs(item, false)
                 2 -> startReadRange(position, RangeMode.Read)
                 3 -> startReadRange(position, RangeMode.Unread)
+                4 -> openChapterInWebView(item)
             }
             true
         }
         menuSheet.show()
-//        val popup = PopupMenu(itemView.context, itemView)
-//        chapterPopupMenu = position to popup
-//
-//        // Inflate our menu resource into the PopupMenu's Menu
-//        popup.menuInflater.inflate(R.menu.chapter_single, popup.menu)
-//
-//        popup.setOnMenuItemClickListener { menuItem ->
-//            when (menuItem.itemId) {
-//                R.id.action_mark_previous_as_read -> markPreviousAs(item, true)
-//                R.id.action_mark_previous_as_unread -> markPreviousAs(item, false)
-//            }
-//            chapterPopupMenu = null
-//            true
-//        }
-//
-//        // Finally show the PopupMenu
-//        popup.show()
     }
 
     override fun onActionStateChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
@@ -915,8 +954,11 @@ class MangaDetailsController :
         bookmarkChapters(listOf(item), !bookmarked)
         snack?.dismiss()
         snack = view?.snack(
-            if (bookmarked) R.string.removed_bookmark
-            else R.string.bookmarked,
+            if (bookmarked) {
+                R.string.removed_bookmark
+            } else {
+                R.string.bookmarked
+            },
             Snackbar.LENGTH_INDEFINITE,
         ) {
             setAction(R.string.undo) {
@@ -937,8 +979,11 @@ class MangaDetailsController :
         presenter.markChaptersRead(listOf(item), !read, false)
         snack?.dismiss()
         snack = view?.snack(
-            if (read) R.string.marked_as_unread
-            else R.string.marked_as_read,
+            if (read) {
+                R.string.marked_as_unread
+            } else {
+                R.string.marked_as_read
+            },
             Snackbar.LENGTH_INDEFINITE,
         ) {
             var undoing = false
@@ -988,7 +1033,9 @@ class MangaDetailsController :
                     (firstPos..lastPos).mapNotNull {
                         (adapter?.getItem(it) as? ChapterItem)?.chapter?.id
                     }.toLongArray()
-                } else longArrayOf()
+                } else {
+                    longArrayOf()
+                }
                 returningFromReader = true
                 intent.putExtra(ReaderActivity.VISIBLE_CHAPTERS, chapterRange)
                 startActivity(intent, bundle)
@@ -1031,8 +1078,11 @@ class MangaDetailsController :
         setOnQueryTextChangeListener(searchView) {
             query = it ?: ""
             if (!isTablet) {
-                if (query.isNotEmpty()) getHeader()?.collapse()
-                else getHeader()?.expand()
+                if (query.isNotEmpty()) {
+                    getHeader()?.collapse()
+                } else {
+                    getHeader()?.expand()
+                }
             }
 
             adapter?.setFilter(query)
@@ -1145,7 +1195,7 @@ class MangaDetailsController :
         val source = presenter.source as? HttpSource ?: return
         val stream = cover?.getUriCompat(context)
         try {
-            val url = source.mangaDetailsRequest(presenter.manga).url.toString()
+            val url = source.getMangaUrl(presenter.manga)
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = "text/*"
                 putExtra(Intent.EXTRA_TEXT, url)
@@ -1165,10 +1215,26 @@ class MangaDetailsController :
         if (isNotOnline()) return
         val source = presenter.source as? HttpSource ?: return
         val url = try {
-            source.mangaDetailsRequest(presenter.manga).url.toString()
+            source.getMangaUrl(presenter.manga)
         } catch (e: Exception) {
             return
         }
+
+        val activity = activity ?: return
+        val intent = WebViewActivity.newIntent(
+            activity.applicationContext,
+            source.id,
+            url,
+            presenter.manga
+                .title,
+        )
+        startActivity(intent)
+    }
+
+    fun openChapterInWebView(item: ChapterItem) {
+        if (isNotOnline()) return
+        val source = presenter.source as? HttpSource ?: return
+        val url = presenter.getChapterUrl(item.chapter) ?: return
 
         val activity = activity ?: return
         val intent = WebViewActivity.newIntent(
@@ -1205,12 +1271,15 @@ class MangaDetailsController :
         val context = view?.context ?: return
         context.materialAlertDialog()
             .setMessage(
-                if (isEverything) context.getString(R.string.remove_all_downloads)
-                else context.resources.getQuantityString(
-                    R.plurals.remove_n_chapters,
-                    chapters.size,
-                    chapters.size,
-                ),
+                if (isEverything) {
+                    context.getString(R.string.remove_all_downloads)
+                } else {
+                    context.resources.getQuantityString(
+                        R.plurals.remove_n_chapters,
+                        chapters.size,
+                        chapters.size,
+                    )
+                },
             )
             .setPositiveButton(R.string.remove) { _, _ ->
                 presenter.deleteChapters(chapters, isEverything = isEverything)
@@ -1338,7 +1407,9 @@ class MangaDetailsController :
         val chapterItem = (adapter?.getItem(position) as? ChapterItem) ?: return
         rangeMode = if (chapterItem.status in listOf(Download.State.NOT_DOWNLOADED, Download.State.ERROR)) {
             RangeMode.Download
-        } else RangeMode.RemoveDownload
+        } else {
+            RangeMode.RemoveDownload
+        }
         onItemClick(null, position)
     }
 
@@ -1391,25 +1462,14 @@ class MangaDetailsController :
         }
     }
 
-    override fun localSearch(text: String) {
-        if (router.backstackSize < 2) {
-            return
-        }
-
-        when (val previousController = router.backstack[router.backstackSize - 2].controller) {
-            is LibraryController -> {
-                router.handleBack()
-                previousController.search(text)
-            }
-            is RecentsController -> {
-                // Manually navigate to LibraryController
-                router.handleBack()
-                (activity as? MainActivity)?.goToTab(R.id.nav_library)
-                val controller =
-                    router.getControllerWithTag(R.id.nav_library.toString()) as LibraryController
-                controller.search(text)
-            }
-        }
+    fun localSearch(text: String, isTag: Boolean) {
+        router.pushController(
+            FilteredLibraryController(
+                text,
+                queryText = text.takeIf { !isTag },
+                filterTags = arrayOf(text).takeIf { isTag } ?: emptyArray(),
+            ).withFadeTransaction(),
+        )
     }
 
     fun sourceSearch(text: String) {
@@ -1433,24 +1493,27 @@ class MangaDetailsController :
         }
     }
 
-    override fun globalSearch(text: String) {
+    fun globalSearch(text: String) {
         if (isNotOnline()) return
         router.pushController(GlobalSearchController(text).withFadeTransaction())
     }
 
-    override fun showFloatingActionMode(view: TextView, content: String?, searchSource: Boolean) {
+    override fun showFloatingActionMode(view: TextView, content: String?, isTag: Boolean) {
         finishFloatingActionMode()
         val previousController = previousController
-        if (!searchSource && previousController !is LibraryController && previousController !is RecentsController) {
+        if (!isTag && previousController !is LibraryController && previousController !is RecentsController) {
             globalSearch(content ?: view.text.toString())
             return
         }
-        val actionModeCallback = if (content != null) FloatingMangaDetailsActionModeCallback(
-            content,
-            showCopy = view is Chip,
-            searchSource = searchSource,
-        )
-        else FloatingMangaDetailsActionModeCallback(view, searchSource = searchSource)
+        val actionModeCallback = if (content != null) {
+            FloatingMangaDetailsActionModeCallback(
+                content,
+                showCopy = view is Chip,
+                searchSource = isTag,
+            )
+        } else {
+            FloatingMangaDetailsActionModeCallback(view, isTag = isTag)
+        }
         if (view is Chip) {
             view.isActivated = true
         }
@@ -1660,7 +1723,9 @@ class MangaDetailsController :
         mode?.title = view?.context?.getString(
             if (startingRangeChapterPos == null) {
                 R.string.select_starting_chapter
-            } else R.string.select_ending_chapter,
+            } else {
+                R.string.select_ending_chapter
+            },
         )
         return false
     }
@@ -1706,8 +1771,9 @@ class MangaDetailsController :
             val activity = activity ?: return
             try {
                 val uri = data.data ?: return
-                if (editMangaDialog != null) editMangaDialog?.updateCover(uri)
-                else {
+                if (editMangaDialog != null) {
+                    editMangaDialog?.updateCover(uri)
+                } else {
                     presenter.editCoverWithStream(uri)
                 }
             } catch (error: IOException) {
@@ -1743,14 +1809,14 @@ class MangaDetailsController :
             Download,
             RemoveDownload,
             Read,
-            Unread
+            Unread,
         }
     }
 
     inner class FloatingMangaDetailsActionModeCallback(
         private val textView: TextView?,
         private val showCopy: Boolean = true,
-        private val searchSource: Boolean = false,
+        private val isTag: Boolean = false,
         private val closeMode: Boolean = true,
     ) : android.view.ActionMode.Callback {
         constructor(
@@ -1774,22 +1840,24 @@ class MangaDetailsController :
             }
         override fun onCreateActionMode(mode: android.view.ActionMode?, menu: Menu?): Boolean {
             mode?.menuInflater?.inflate(
-                if (searchSource) R.menu.manga_details_tag else R.menu.manga_details_title,
+                if (isTag) R.menu.manga_details_tag else R.menu.manga_details_title,
                 menu,
             )
             menu?.findItem(R.id.action_copy)?.isVisible = showCopy
-            val sourceMenuItem = menu?.findItem(R.id.action_source_search)
-            sourceMenuItem?.isVisible = searchSource && presenter.source is CatalogueSource
+            var sourceMenuItem = menu?.findItem(R.id.action_source_search)
+            sourceMenuItem?.isVisible = isTag && presenter.source is CatalogueSource
             val context = view?.context ?: return false
             val localItem = menu?.findItem(R.id.action_local_search) ?: return true
-            localItem.isVisible = when (previousController) {
-                is LibraryController, is RecentsController -> true
-                else -> false
-            }
+            localItem.isVisible = previousController !is FilteredLibraryController
             val library = context.getString(R.string.library).lowercase(Locale.getDefault())
             localItem.title = context.getString(R.string.search_, library)
             sourceMenuItem?.title = context.getString(R.string.search_, presenter.source.name)
-            if (searchSource) {
+            if (isTag) {
+                if (previousController is BrowseSourceController) {
+                    menu.removeItem(R.id.action_source_search)
+                    sourceMenuItem = menu.add(0, R.id.action_source_search, 1, sourceMenuItem?.title)
+                    sourceMenuItem?.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
+                }
                 sourceMenuItem?.icon = presenter.source.icon()
             }
             return true
@@ -1807,7 +1875,7 @@ class MangaDetailsController :
                 R.id.action_copy -> copyToClipboard(text, null)
                 R.id.action_global_search -> globalSearch(text)
                 R.id.action_source_search -> sourceSearch(text)
-                R.id.action_local_search -> localSearch(text)
+                R.id.action_local_search -> localSearch(text, isTag)
                 else -> return false
             }
             if (closeMode) {

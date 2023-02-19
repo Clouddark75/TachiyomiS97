@@ -72,7 +72,6 @@ open class WebViewActivity : BaseWebViewActivity() {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
                     invalidateOptionsMenu()
-                    title = view?.title
                     binding.swipeRefresh.isEnabled = true
                     binding.swipeRefresh.isRefreshing = false
                 }
@@ -173,6 +172,6 @@ open class WebViewActivity : BaseWebViewActivity() {
     }
 
     private fun openInBrowser() {
-        binding.webview.url?.let { openInBrowser(it) }
+        binding.webview.url?.let { openInBrowser(it, forceBrowser = true, fullBrowser = true) }
     }
 }

@@ -527,8 +527,8 @@
         <item quantity="other">%1$d sider igjen</item>
     </plurals>
     <plurals name="chapters_plural">
-        <item quantity="one">%1$d kapittel</item>
-        <item quantity="other">%1$d kapitler</item>
+        <item quantity="one">%1$s kapittel</item>
+        <item quantity="other">%1$s kapitler</item>
     </plurals>
     <string name="pad_cutout_areas">Legg til luft rundt utklippsområder</string>
     <string name="confirm_category_deletion_message">Manga i denne kategorien vil bli flyttet inn i den forvalgte kategorien.</string>
@@ -909,7 +909,7 @@
     <string name="tracking_info">Enveissynkronisering for å oppdatere kapittelfremdrift i sporingstjenester. Sett opp sporing for individuelle mangaer med sporingsknappen på sidene til mangaene.</string>
     <string name="enhanced_services">Forbedrede tjenester</string>
     <string name="enhanced_tracking_info">Tjenester som gir forbedrede funksjoner for spesifikke ressurser. Det holdes automatisk øye med manga når den legges til i biblioteket ditt.</string>
-    <string name="download_queue_size_warning">Advarsel: store bulknedlastinger kan føre til at kilder blir tregere og/eller blokkerer Tachiyomi</string>
+    <string name="download_queue_size_warning">Advarsel: store bulknedlastinger kan føre til at kilder blir tregere og/eller blokkerer Tachiyomi. Trykk for å lære mer.</string>
     <string name="use_shizuku_to_install">Bruk Shizuku for å installere utvidelser</string>
     <string name="use_shizuku_summary">Lar utvidelser installeres uten manuell bekreftelse og aktiverer automatiske oppdateringer for Android 12 enheter</string>
     <string name="update_tracking_scoring_type">Oppdater %1$s sin poengtype</string>
@@ -961,4 +961,45 @@
     <string name="pref_lowest">Laveste</string>
     <string name="webtoon_side_padding_5">5%</string>
     <string name="downloaded_chapters">Last ned kapitler</string>
+    <string name="tap_zones">Navigasjonsoppsett</string>
+    <string name="navigate_pan">Naviger til panorering</string>
+    <string name="cover_only_grid">Kun omslags-rutenett</string>
+    <string name="auto_download_while_reading">Last ned automatisk mens du leser</string>
+    <string name="download_notifier_split_failed">Kunne ikke dele det nedlastede bildet</string>
+    <string name="download_notifier_split_page_not_found">Side %d ble ikke funnet under deling</string>
+    <string name="loader_rar5_error">RARv5-formatet støttes ikke</string>
+    <string name="download_ahead">Last ned i forkant</string>
+    <string name="download_ahead_info">Fungerer kun på oppføringer i biblioteket, og hvis det nåværende kapittelet samt det neste allerede er lastet ned</string>
+    <string name="split_tall_images">Del høye bilder</string>
+    <string name="on_hold_list">På vent liste</string>
+    <string name="unfinished_list">Uferdig liste</string>
+    <string name="split_tall_images_summary">Forbedrer leserytelsen</string>
+    <string name="reading_list">Leseliste</string>
+    <plurals name="next_unread_chapters">
+        <item quantity="one">Neste uleste kapittel</item>
+        <item quantity="other">Neste %d uleste kapitler</item>
+    </plurals>
+    <string name="wish_list">Ønskeliste</string>
+    <string name="complete_list">Komplett liste</string>
+    <string name="user_agent_string">Standard streng for brukeragent</string>
+    <string name="lavender">Lavendel</string>
+    <string name="trackers">Trackere</string>
+    <string name="read_duration">Tid brukt</string>
+    <string name="statistics">Statistikk</string>
+    <string name="skipped_reason_not_always_update">Hoppet over fordi seriene ikke krever oppdateringer</string>
+    <string name="error_user_agent_string_invalid">Ugyldig streng for brukeragent</string>
+    <string name="show_">Vis %1$s</string>
+    <string name="must_view_details_before_migration">Denne oppføringens detaljside må vises før du kan migrere</string>
+    <string name="new_beta_version_available">Ny beta-versjon tilgjengelig!</string>
+    <string name="check_for_beta_releases">Se etter beta-utgivelser</string>
+    <string name="violet">Lilla</string>
+    <string name="expanded_toolbar">Utvidet verktøylinje</string>
+    <string name="most_entries">Mest oppføringer</string>
+    <string name="select_uninstalled_sources">Velg avinstallerte kilder</string>
+    <string name="popular">Populært</string>
+    <string name="skip_dupe_chapters">Hopp over dupliserte kapitler</string>
+    <string name="allow_deleting_bookmarked_chapters">Tillat sletting av bokmerkede kapitler</string>
+    <string name="appwidget_updates_description">Se de nylig oppdaterte biblotekoppføringene dine</string>
+    <string name="appwidget_unavailable_locked">Moduler er ikke tilgjengelig når applås er aktivert</string>
+    <string name="hide_in_library_items">Skjul oppføringer som allerede er i biblioteket</string>
 </resources>

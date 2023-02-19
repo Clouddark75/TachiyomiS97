@@ -32,6 +32,7 @@ import eu.kanade.tachiyomi.extension.ExtensionUpdateJob
 import eu.kanade.tachiyomi.source.SourceManager
 import eu.kanade.tachiyomi.source.UnmeteredSource
 import eu.kanade.tachiyomi.source.model.SManga
+import eu.kanade.tachiyomi.source.model.UpdateStrategy
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.util.chapter.syncChaptersWithSource
 import eu.kanade.tachiyomi.util.chapter.syncChaptersWithTrackServiceTwoWay
@@ -129,7 +130,7 @@ class LibraryUpdateService(
 
         DETAILS, // Manga metadata
 
-        TRACKING // Tracking metadata
+        TRACKING, // Tracking metadata
     }
 
     /**
@@ -303,16 +304,24 @@ class LibraryUpdateService(
     private fun filterMangaToUpdate(mangaToAdd: List<LibraryManga>): List<LibraryManga> {
         val restrictions = preferences.libraryUpdateMangaRestriction().get()
         return mangaToAdd.filter { manga ->
-            return@filter if (MANGA_NON_COMPLETED in restrictions && manga.status == SManga.COMPLETED) {
-                skippedUpdates[manga] = getString(R.string.skipped_reason_completed)
-                false
-            } else if (MANGA_HAS_UNREAD in restrictions && manga.unread != 0) {
-                skippedUpdates[manga] = getString(R.string.skipped_reason_not_caught_up)
-                false
-            } else if (MANGA_NON_READ in restrictions && manga.totalChapters > 0 && !manga.hasRead) {
-                skippedUpdates[manga] = getString(R.string.skipped_reason_not_started)
-                false
-            } else true
+            when {
+                MANGA_NON_COMPLETED in restrictions && manga.status == SManga.COMPLETED -> {
+                    skippedUpdates[manga] = getString(R.string.skipped_reason_completed)
+                }
+                MANGA_HAS_UNREAD in restrictions && manga.unread != 0 -> {
+                    skippedUpdates[manga] = getString(R.string.skipped_reason_not_caught_up)
+                }
+                MANGA_NON_READ in restrictions && manga.totalChapters > 0 && !manga.hasRead -> {
+                    skippedUpdates[manga] = getString(R.string.skipped_reason_not_started)
+                }
+                manga.update_strategy != UpdateStrategy.ALWAYS_UPDATE -> {
+                    skippedUpdates[manga] = getString(R.string.skipped_reason_not_always_update)
+                }
+                else -> {
+                    return@filter true
+                }
+            }
+            return@filter false
         }
     }
 
@@ -411,8 +420,7 @@ class LibraryUpdateService(
         manga: LibraryManga,
         progress: Int,
         shouldDownload: Boolean,
-    ):
-        Boolean {
+    ): Boolean {
         try {
             var hasDownloads = false
             if (job?.isCancelled == true) {
@@ -444,9 +452,11 @@ class LibraryUpdateService(
                         downloadManager.deleteChapters(removedChapters, manga, source)
                     }
                 }
-                if (newChapters.first.size + newChapters.second.size > 0) listener?.onUpdateManga(
-                    manga,
-                )
+                if (newChapters.first.size + newChapters.second.size > 0) {
+                    listener?.onUpdateManga(
+                        manga,
+                    )
+                }
             }
 
             if (preferences.twowaySyncTracking()) {
@@ -655,10 +665,12 @@ class LibraryUpdateService(
                     putExtra(KEY_TARGET, target)
                     category?.id?.let { id ->
                         putExtra(KEY_CATEGORY, id)
-                        if (mangaToUse != null) putExtra(
-                            KEY_MANGAS,
-                            mangaToUse.mapNotNull { it.id }.toLongArray(),
-                        )
+                        if (mangaToUse != null) {
+                            putExtra(
+                                KEY_MANGAS,
+                                mangaToUse.mapNotNull { it.id }.toLongArray(),
+                            )
+                        }
                     }
                 }
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
@@ -668,9 +680,14 @@ class LibraryUpdateService(
                 }
                 true
             } else {
-                if (target == Target.CHAPTERS) category?.id?.let {
-                    if (mangaToUse != null) instance?.addMangaToQueue(it, mangaToUse)
-                    else instance?.addCategory(it)
+                if (target == Target.CHAPTERS) {
+                    category?.id?.let {
+                        if (mangaToUse != null) {
+                            instance?.addMangaToQueue(it, mangaToUse)
+                        } else {
+                            instance?.addCategory(it)
+                        }
+                    }
                 }
                 false
             }

@@ -22,14 +22,18 @@ internal class ExtensionGithubApi {
 
     suspend fun findExtensions(): List<Extension.Available> {
         return withIOContext {
-            val githubResponse = if (requiresFallbackSource) null else try {
-                networkService.client
-                    .newCall(GET("${REPO_URL_PREFIX}index.min.json"))
-                    .await()
-            } catch (e: Throwable) {
-                Timber.e(e, "Failed to get extensions from GitHub")
-                requiresFallbackSource = true
+            val githubResponse = if (requiresFallbackSource) {
                 null
+            } else {
+                try {
+                    networkService.client
+                        .newCall(GET("${REPO_URL_PREFIX}index.min.json"))
+                        .await()
+                } catch (e: Throwable) {
+                    Timber.e(e, "Failed to get extensions from GitHub")
+                    requiresFallbackSource = true
+                    null
+                }
             }
 
             val response = githubResponse ?: run {
@@ -64,8 +68,9 @@ internal class ExtensionGithubApi {
             for (installedExt in installedExtensions) {
                 val pkgName = installedExt.pkgName
                 val availableExt = extensions.find { it.pkgName == pkgName } ?: continue
-
-                val hasUpdate = availableExt.versionCode > installedExt.versionCode
+                val hasUpdatedVer = availableExt.versionCode > installedExt.versionCode
+                val hasUpdatedLib = availableExt.libVersion > installedExt.libVersion
+                val hasUpdate = installedExt.isUnofficial.not() && (hasUpdatedVer || hasUpdatedLib)
                 if (hasUpdate) {
                     extensionsWithUpdate.add(availableExt)
                 }
@@ -78,7 +83,7 @@ internal class ExtensionGithubApi {
     private fun List<ExtensionJsonObject>.toExtensions(): List<Extension.Available> {
         return this
             .filter {
-                val libVersion = it.version.substringBeforeLast('.').toDouble()
+                val libVersion = it.extractLibVersion()
                 libVersion >= ExtensionLoader.LIB_VERSION_MIN && libVersion <= ExtensionLoader.LIB_VERSION_MAX
             }
             .map {
@@ -87,6 +92,7 @@ internal class ExtensionGithubApi {
                     pkgName = it.pkg,
                     versionName = it.version,
                     versionCode = it.code,
+                    libVersion = it.extractLibVersion(),
                     lang = it.lang,
                     isNsfw = it.nsfw == 1,
                     hasReadme = it.hasReadme == 1,
@@ -108,6 +114,10 @@ internal class ExtensionGithubApi {
         } else {
             REPO_URL_PREFIX
         }
+    }
+
+    private fun ExtensionJsonObject.extractLibVersion(): Double {
+        return version.substringBeforeLast('.').toDouble()
     }
 }
 

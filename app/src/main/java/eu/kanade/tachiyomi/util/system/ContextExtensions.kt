@@ -379,11 +379,11 @@ fun Context.isServiceRunning(serviceClass: Class<*>): Boolean {
         .any { className == it.service.className }
 }
 
-fun Context.openInBrowser(url: String, @ColorInt toolbarColor: Int? = null) {
-    this.openInBrowser(url.toUri(), toolbarColor)
+fun Context.openInBrowser(url: String, @ColorInt toolbarColor: Int? = null, forceBrowser: Boolean = false) {
+    this.openInBrowser(url.toUri(), toolbarColor, forceBrowser)
 }
 
-fun Context.openInBrowser(uri: Uri, @ColorInt toolbarColor: Int? = null) {
+fun Context.openInBrowser(uri: Uri, @ColorInt toolbarColor: Int? = null, forceBrowser: Boolean = false) {
     try {
         val intent = CustomTabsIntent.Builder()
             .setDefaultColorSchemeParams(
@@ -392,6 +392,13 @@ fun Context.openInBrowser(uri: Uri, @ColorInt toolbarColor: Int? = null) {
                     .build(),
             )
             .build()
+        if (forceBrowser) {
+            val packages = getCustomTabsPackages().maxByOrNull { it.preferredOrder }
+            val processName = packages?.activityInfo?.processName
+            if (processName == null) {
+                intent.intent.`package` = processName
+            }
+        }
         intent.launchUrl(this, uri)
     } catch (e: Exception) {
         toast(e.message)
@@ -401,27 +408,47 @@ fun Context.openInBrowser(uri: Uri, @ColorInt toolbarColor: Int? = null) {
 /**
  * Opens a URL in a custom tab.
  */
-fun Context.openInBrowser(url: String, forceBrowser: Boolean): Boolean {
+fun Context.openInBrowser(url: String, forceBrowser: Boolean, fullBrowser: Boolean = true): Boolean {
     try {
         val parsedUrl = url.toUri()
-        val intent = CustomTabsIntent.Builder()
-            .setDefaultColorSchemeParams(
-                CustomTabColorSchemeParams.Builder()
-                    .setToolbarColor(getResourceColor(R.attr.colorPrimaryVariant))
-                    .build(),
-            )
-            .build()
-        if (forceBrowser) {
-            val packages = getCustomTabsPackages().maxByOrNull { it.preferredOrder }
-            val processName = packages?.activityInfo?.processName ?: return false
-            intent.intent.`package` = processName
+        if (forceBrowser && fullBrowser) {
+            val intent = Intent(Intent.ACTION_VIEW, parsedUrl).apply {
+                defaultBrowserPackageName()?.let { setPackage(it) }
+            }
+            startActivity(intent)
+        } else {
+            val intent = CustomTabsIntent.Builder()
+                .setDefaultColorSchemeParams(
+                    CustomTabColorSchemeParams.Builder()
+                        .setToolbarColor(getResourceColor(R.attr.colorPrimaryVariant))
+                        .build(),
+                )
+                .build()
+            if (forceBrowser) {
+                val packages = getCustomTabsPackages().maxByOrNull { it.preferredOrder }
+                val processName = packages?.activityInfo?.processName ?: return false
+                intent.intent.`package` = processName
+            }
+            intent.launchUrl(this, parsedUrl)
         }
-        intent.launchUrl(this, parsedUrl)
         return true
     } catch (e: Exception) {
         toast(e.message)
         return false
     }
+}
+
+fun Context.defaultBrowserPackageName(): String? {
+    val browserIntent = Intent(Intent.ACTION_VIEW, "http://".toUri())
+    val resolveInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        packageManager.resolveActivity(browserIntent, PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_DEFAULT_ONLY.toLong()))
+    } else {
+        @Suppress("DEPRECATION")
+        packageManager.resolveActivity(browserIntent, PackageManager.MATCH_DEFAULT_ONLY)
+    }
+    return resolveInfo
+        ?.activityInfo?.packageName
+        ?.takeUnless { it in DeviceUtil.invalidDefaultBrowsers }
 }
 
 /**
@@ -452,25 +479,22 @@ fun Context.isInNightMode(): Boolean {
 }
 
 fun Context.appDelegateNightMode(): Int {
-    return if (isInNightMode()) AppCompatDelegate.MODE_NIGHT_YES
-    else AppCompatDelegate.MODE_NIGHT_NO
+    return if (isInNightMode()) {
+        AppCompatDelegate.MODE_NIGHT_YES
+    } else {
+        AppCompatDelegate.MODE_NIGHT_NO
+    }
 }
 
 fun Context.isOnline(): Boolean {
-    val connectivityManager = this
-        .getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
-    var result = false
-    connectivityManager?.let {
-        val networkCapabilities = connectivityManager.activeNetwork ?: return false
-        val actNw = connectivityManager.getNetworkCapabilities(networkCapabilities) ?: return false
-        val maxTransport = when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1 -> NetworkCapabilities.TRANSPORT_LOWPAN
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> NetworkCapabilities.TRANSPORT_WIFI_AWARE
-            else -> NetworkCapabilities.TRANSPORT_VPN
-        }
-        result = (NetworkCapabilities.TRANSPORT_CELLULAR..maxTransport).any(actNw::hasTransport)
+    val networkCapabilities = connectivityManager.activeNetwork ?: return false
+    val actNw = connectivityManager.getNetworkCapabilities(networkCapabilities) ?: return false
+    val maxTransport = when {
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1 -> NetworkCapabilities.TRANSPORT_LOWPAN
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> NetworkCapabilities.TRANSPORT_WIFI_AWARE
+        else -> NetworkCapabilities.TRANSPORT_VPN
     }
-    return result
+    return (NetworkCapabilities.TRANSPORT_CELLULAR..maxTransport).any(actNw::hasTransport)
 }
 
 fun Context.createFileInCacheDir(name: String): File {
@@ -497,7 +521,9 @@ val Context.localeContext: Context
         val pref = Injekt.get<PreferencesHelper>()
         val prefsLang = if (pref.appLanguage().isSet()) {
             Locale.forLanguageTag(pref.appLanguage().get())
-        } else null
+        } else {
+            null
+        }
         val configuration = Configuration(resources.configuration)
         configuration.setLocale(
             prefsLang
@@ -519,11 +545,13 @@ val Context.systemLangContext: Context
 
         val systemLocale = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             getSystemService<LocaleManager>()?.systemLocales?.get(0)
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            Resources.getSystem().configuration.locales.get(0)
         } else {
-            return this
-        } ?: Locale.getDefault()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                Resources.getSystem().configuration.locales.get(0)
+            } else {
+                return this
+            } ?: Locale.getDefault()
+        }
         configuration.setLocale(systemLocale)
         return createConfigurationContext(configuration)
     }

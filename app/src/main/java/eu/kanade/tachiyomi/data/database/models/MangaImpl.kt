@@ -4,6 +4,7 @@ import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.DownloadProvider
 import eu.kanade.tachiyomi.data.library.CustomMangaManager
 import eu.kanade.tachiyomi.source.model.SManga
+import eu.kanade.tachiyomi.source.model.UpdateStrategy
 import uy.kohesive.injekt.injectLazy
 
 open class MangaImpl : Manga {
@@ -44,8 +45,12 @@ open class MangaImpl : Manga {
         set(value) { ogGenre = value }
 
     override var status: Int
-        get() = if (favorite) customMangaManager.getManga(this)?.status.takeIf { it != -1 }
-            ?: ogStatus else ogStatus
+        get() = if (favorite) {
+            customMangaManager.getManga(this)?.status.takeIf { it != -1 }
+                ?: ogStatus
+        } else {
+            ogStatus
+        }
         set(value) { ogStatus = value }
 
     override var thumbnail_url: String? = null
@@ -63,6 +68,8 @@ open class MangaImpl : Manga {
     override var hide_title: Boolean = false
 
     override var date_added: Long = 0
+
+    override var update_strategy: UpdateStrategy = UpdateStrategy.ALWAYS_UPDATE
 
     override var filtered_scanlators: String? = null
 
@@ -102,7 +109,10 @@ open class MangaImpl : Manga {
     }
 
     override fun hashCode(): Int {
-        return if (::url.isInitialized) url.hashCode()
-        else (id ?: 0L).hashCode()
+        return if (::url.isInitialized) {
+            url.hashCode()
+        } else {
+            (id ?: 0L).hashCode()
+        }
     }
 }

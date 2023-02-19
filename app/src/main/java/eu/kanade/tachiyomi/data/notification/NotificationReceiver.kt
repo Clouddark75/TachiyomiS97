@@ -6,7 +6,6 @@ import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Handler
 import eu.kanade.tachiyomi.data.backup.BackupRestoreService
 import eu.kanade.tachiyomi.data.database.DatabaseHelper
@@ -77,11 +76,13 @@ class NotificationReceiver : BroadcastReceiver() {
                 )
             ACTION_MARK_AS_READ -> {
                 val notificationId = intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1)
-                if (notificationId > -1) dismissNotification(
-                    context,
-                    notificationId,
-                    intent.getIntExtra(EXTRA_GROUP_ID, 0),
-                )
+                if (notificationId > -1) {
+                    dismissNotification(
+                        context,
+                        notificationId,
+                        intent.getIntExtra(EXTRA_GROUP_ID, 0),
+                    )
+                }
                 val urls = intent.getStringArrayExtra(EXTRA_CHAPTER_URL) ?: return
                 val mangaId = intent.getLongExtra(EXTRA_MANGA_ID, -1)
                 markAsRead(urls, mangaId)
@@ -348,18 +349,16 @@ class NotificationReceiver : BroadcastReceiver() {
             groupId: Int? =
                 null,
         ) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                val groupKey = context.notificationManager.activeNotifications.find {
-                    it.id == notificationId
-                }?.groupKey
-                if (groupId != null && groupId != 0 && groupKey != null && groupKey.isNotEmpty()) {
-                    val notifications = context.notificationManager.activeNotifications.filter {
-                        it.groupKey == groupKey
-                    }
-                    if (notifications.size == 2) {
-                        context.notificationManager.cancel(groupId)
-                        return
-                    }
+            val groupKey = context.notificationManager.activeNotifications.find {
+                it.id == notificationId
+            }?.groupKey
+            if (groupId != null && groupId != 0 && groupKey != null && groupKey.isNotEmpty()) {
+                val notifications = context.notificationManager.activeNotifications.filter {
+                    it.groupKey == groupKey
+                }
+                if (notifications.size == 2) {
+                    context.notificationManager.cancel(groupId)
+                    return
                 }
             }
             context.notificationManager.cancel(notificationId)
@@ -416,8 +415,7 @@ class NotificationReceiver : BroadcastReceiver() {
         internal fun openChapterPendingActivity(
             context: Context,
             manga: Manga,
-            chapter:
-                Chapter,
+            chapter: Chapter,
         ): PendingIntent {
             val newIntent = ReaderActivity.newIntent(context, manga, chapter)
             return PendingIntent.getActivity(
@@ -435,8 +433,7 @@ class NotificationReceiver : BroadcastReceiver() {
          * @param notes notes of the release
          * @param downloadLink download link to the apk
          */
-        internal fun openUpdatePendingActivity(context: Context, notes: String, downloadLink: String):
-            PendingIntent {
+        internal fun openUpdatePendingActivity(context: Context, notes: String, downloadLink: String): PendingIntent {
             val newIntent =
                 Intent(context, MainActivity::class.java).setAction(MainActivity.SHORTCUT_UPDATE_NOTES)
                     .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
@@ -456,8 +453,7 @@ class NotificationReceiver : BroadcastReceiver() {
          * @param context context of application
          * @param manga manga of chapter
          */
-        internal fun openChapterPendingActivity(context: Context, manga: Manga, groupId: Int):
-            PendingIntent {
+        internal fun openChapterPendingActivity(context: Context, manga: Manga, groupId: Int): PendingIntent {
             val newIntent =
                 Intent(context, MainActivity::class.java).setAction(MainActivity.SHORTCUT_MANGA)
                     .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
@@ -515,11 +511,9 @@ class NotificationReceiver : BroadcastReceiver() {
         internal fun markAsReadPendingBroadcast(
             context: Context,
             manga: Manga,
-            chapters:
-                Array<Chapter>,
+            chapters: Array<Chapter>,
             groupId: Int,
-        ):
-            PendingIntent {
+        ): PendingIntent {
             val newIntent = Intent(context, NotificationReceiver::class.java).apply {
                 action = ACTION_MARK_AS_READ
                 putExtra(EXTRA_CHAPTER_URL, chapters.map { it.url }.toTypedArray())

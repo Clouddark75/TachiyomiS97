@@ -171,7 +171,9 @@ interface Manga : SManga {
             (sourceName.contains("manhua", true) && currentTags.none { tag -> isMangaTag(tag) })
         ) {
             ReadingModeType.LEFT_TO_RIGHT.flagValue
-        } else 0
+        } else {
+            0
+        }
     }
 
     fun isSeriesTag(tag: String): Boolean {
@@ -219,7 +221,8 @@ interface Manga : SManga {
             sourceName.contains("xkcd", true) ||
             sourceName.contains("tapas", true) ||
             sourceName.contains("ComicExtra", true) ||
-            sourceName.contains("Read Comics Online", true)
+            sourceName.contains("Read Comics Online", true) ||
+            sourceName.contains("ReadComicOnline", true)
     }
 
     fun isOneShotOrCompleted(db: DatabaseHelper): Boolean {

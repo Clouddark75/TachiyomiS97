@@ -137,6 +137,11 @@ open class BaseWebViewActivity : BaseActivity<WebviewActivityBinding>() {
                     }
                     super.onProgressChanged(view, newProgress)
                 }
+
+                override fun onReceivedTitle(view: WebView?, title: String?) {
+                    super.onReceivedTitle(view, title)
+                    this@BaseWebViewActivity.title = title
+                }
             }
             val marginB = binding.webview.marginBottom
             ViewCompat.setOnApplyWindowInsetsListener(binding.swipeRefresh) { v, insets ->
@@ -215,8 +220,11 @@ open class BaseWebViewActivity : BaseActivity<WebviewActivityBinding>() {
         window.statusBarColor = ColorUtils.setAlphaComponent(colorSurface, 255)
         binding.toolbar.setBackgroundColor(colorSurface)
         binding.toolbar.popupTheme =
-            if (lightMode) R.style.ThemeOverlay_Material3
-            else R.style.ThemeOverlay_Material3_Dark
+            if (lightMode) {
+                R.style.ThemeOverlay_Material3
+            } else {
+                R.style.ThemeOverlay_Material3_Dark
+            }
         binding.toolbar.setNavigationIconTint(actionBarTintColor)
         binding.toolbar.overflowIcon?.mutate()
         binding.toolbar.setTitleTextColor(actionBarTintColor)
@@ -225,8 +233,11 @@ open class BaseWebViewActivity : BaseActivity<WebviewActivityBinding>() {
         binding.swipeRefresh.setProgressBackgroundColorSchemeColor(colorPrimaryVariant)
 
         window.navigationBarColor =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O || !lightMode) colorPrimaryVariant
-            else Color.BLACK
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O || !lightMode) {
+                colorPrimaryVariant
+            } else {
+                Color.BLACK
+            }
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
     }

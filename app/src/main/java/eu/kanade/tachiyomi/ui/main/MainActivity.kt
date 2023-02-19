@@ -26,6 +26,7 @@ import android.view.WindowManager
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.addCallback
 import androidx.annotation.IdRes
+import androidx.appcompat.view.ActionMode
 import androidx.appcompat.view.menu.ActionMenuItemView
 import androidx.appcompat.view.menu.MenuItemImpl
 import androidx.appcompat.widget.ActionMenuView
@@ -38,12 +39,18 @@ import androidx.core.view.GestureDetectorCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.children
 import androidx.core.view.forEach
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.window.layout.DisplayFeature
+import androidx.window.layout.FoldingFeature
+import androidx.window.layout.WindowInfoTracker
 import com.bluelinelabs.conductor.Conductor
 import com.bluelinelabs.conductor.Controller
 import com.bluelinelabs.conductor.ControllerChangeHandler
@@ -152,6 +159,8 @@ open class MainActivity : BaseActivity<MainActivityBinding>(), DownloadServiceLi
     private var overflowDialog: Dialog? = null
     var currentToolbar: Toolbar? = null
     var ogWidth: Int = Int.MAX_VALUE
+    var hingeGapSize = 0
+        private set
 
     private val actionButtonSize: Pair<Int, Int> by lazy {
         val attrs = intArrayOf(android.R.attr.minWidth, android.R.attr.minHeight)
@@ -182,6 +191,7 @@ open class MainActivity : BaseActivity<MainActivityBinding>(), DownloadServiceLi
     val toolbarHeight: Int
         get() = max(binding.toolbar.height, binding.cardFrame.height, binding.appBar.attrToolbarHeight)
 
+    private var actionMode: ActionMode? = null
     var backPressedCallback: OnBackPressedCallback? = null
     private val backCallback = {
         pressingBack()
@@ -338,7 +348,9 @@ open class MainActivity : BaseActivity<MainActivityBinding>(), DownloadServiceLi
                     continueSwitchingTabs = true
                     this@MainActivity.nav.selectedItemId = id
                 }
-                ) return@setOnItemSelectedListener false
+                ) {
+                    return@setOnItemSelectedListener false
+                }
             }
             continueSwitchingTabs = false
             val currentRoot = router.backstack.firstOrNull()
@@ -381,7 +393,9 @@ open class MainActivity : BaseActivity<MainActivityBinding>(), DownloadServiceLi
                 rootSearchController !is SmallToolbarInterface
             ) {
                 binding.searchToolbar.menu.findItem(R.id.action_search)?.expandActionView()
-            } else onBackPressedDispatcher.onBackPressed()
+            } else {
+                onBackPressedDispatcher.onBackPressed()
+            }
         }
 
         binding.searchToolbar.searchItem?.setOnActionExpandListener(
@@ -429,7 +443,9 @@ open class MainActivity : BaseActivity<MainActivityBinding>(), DownloadServiceLi
         binding.searchToolbar.setOnMenuItemClickListener {
             if (router.backstack.lastOrNull()?.controller?.onOptionsItemSelected(it) == true) {
                 return@setOnMenuItemClickListener true
-            } else return@setOnMenuItemClickListener onOptionsItemSelected(it)
+            } else {
+                return@setOnMenuItemClickListener onOptionsItemSelected(it)
+            }
         }
 
         nav.isVisible = !hideBottomNav
@@ -516,11 +532,30 @@ open class MainActivity : BaseActivity<MainActivityBinding>(), DownloadServiceLi
                 }
             }
         setFloatingToolbar(canShowFloatingToolbar(router.backstack.lastOrNull()?.controller), changeBG = false)
+
+        lifecycleScope.launchUI {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                WindowInfoTracker.getOrCreate(this@MainActivity).windowLayoutInfo(this@MainActivity)
+                    .collect { newLayoutInfo ->
+                        hingeGapSize = 0
+                        for (displayFeature: DisplayFeature in newLayoutInfo.displayFeatures) {
+                            if (displayFeature is FoldingFeature && displayFeature.occlusionType == FoldingFeature.OcclusionType.FULL &&
+                                displayFeature.isSeparating && displayFeature.orientation == FoldingFeature.Orientation.VERTICAL
+                            ) {
+                                hingeGapSize = displayFeature.bounds.width()
+                            }
+                        }
+                        if (hingeGapSize > 0) {
+                            (router.backstack.lastOrNull()?.controller as? HingeSupportedController)?.updateForHinge()
+                        }
+                    }
+            }
+        }
     }
 
     fun reEnableBackPressedCallBack() {
         val returnToStart = preferences.backReturnsToStart().get() && this !is SearchActivity
-        backPressedCallback?.isEnabled =
+        backPressedCallback?.isEnabled = actionMode != null ||
             (binding.searchToolbar.hasExpandedActionView() && binding.cardFrame.isVisible) ||
             router.canStillGoBack() || (returnToStart && startingTab() != nav.selectedItemId)
     }
@@ -559,8 +594,11 @@ open class MainActivity : BaseActivity<MainActivityBinding>(), DownloadServiceLi
         setSearchTBLongClick()
         val showSearchBar = (show || showSearchAnyway) && onSearchController
         val isAppBarVisible = binding.appBar.isVisible
-        val needsAnim = if (showSearchBar) !binding.cardFrame.isVisible || binding.cardFrame.alpha < 1f
-        else binding.cardFrame.isVisible || binding.cardFrame.alpha > 0f
+        val needsAnim = if (showSearchBar) {
+            !binding.cardFrame.isVisible || binding.cardFrame.alpha < 1f
+        } else {
+            binding.cardFrame.isVisible || binding.cardFrame.alpha > 0f
+        }
         if (this::router.isInitialized && needsAnim && binding.appBar.useLargeToolbar && !onSmallerController &&
             (showSearchAnyway || isAppBarVisible)
         ) {
@@ -657,12 +695,16 @@ open class MainActivity : BaseActivity<MainActivityBinding>(), DownloadServiceLi
         }
     }
 
-    override fun startSupportActionMode(callback: androidx.appcompat.view.ActionMode.Callback): androidx.appcompat.view.ActionMode? {
+    override fun startSupportActionMode(callback: ActionMode.Callback): ActionMode? {
         window?.statusBarColor = getResourceColor(R.attr.colorPrimaryVariant)
-        return super.startSupportActionMode(callback)
+        actionMode = super.startSupportActionMode(callback)
+        reEnableBackPressedCallBack()
+        return actionMode
     }
 
-    override fun onSupportActionModeFinished(mode: androidx.appcompat.view.ActionMode) {
+    override fun onSupportActionModeFinished(mode: ActionMode) {
+        actionMode = null
+        reEnableBackPressedCallBack()
         launchUI {
             val scale = Settings.Global.getFloat(
                 contentResolver,
@@ -672,10 +714,12 @@ open class MainActivity : BaseActivity<MainActivityBinding>(), DownloadServiceLi
             val duration = resources.getInteger(android.R.integer.config_mediumAnimTime) * scale
             delay(duration.toLong())
             delay(100)
-            if (Color.alpha(window?.statusBarColor ?: Color.BLACK) >= 255) window?.statusBarColor =
-                getResourceColor(
-                    android.R.attr.statusBarColor,
-                )
+            if (Color.alpha(window?.statusBarColor ?: Color.BLACK) >= 255) {
+                window?.statusBarColor =
+                    getResourceColor(
+                        android.R.attr.statusBarColor,
+                    )
+            }
         }
         super.onSupportActionModeFinished(mode)
     }
@@ -748,7 +792,7 @@ open class MainActivity : BaseActivity<MainActivityBinding>(), DownloadServiceLi
         saveExtras()
     }
 
-    fun saveExtras() {
+    private fun saveExtras() {
         mangaShortcutManager.updateShortcuts(this)
         MangaCoverMetadata.savePrefs()
     }
@@ -803,11 +847,13 @@ open class MainActivity : BaseActivity<MainActivityBinding>(), DownloadServiceLi
 
     protected open fun handleIntentAction(intent: Intent): Boolean {
         val notificationId = intent.getIntExtra("notificationId", -1)
-        if (notificationId > -1) NotificationReceiver.dismissNotification(
-            applicationContext,
-            notificationId,
-            intent.getIntExtra("groupId", 0),
-        )
+        if (notificationId > -1) {
+            NotificationReceiver.dismissNotification(
+                applicationContext,
+                notificationId,
+                intent.getIntExtra("groupId", 0),
+            )
+        }
         when (intent.action) {
             SHORTCUT_LIBRARY -> nav.selectedItemId = R.id.nav_library
             SHORTCUT_RECENTLY_UPDATED, SHORTCUT_RECENTLY_READ -> {
@@ -877,7 +923,7 @@ open class MainActivity : BaseActivity<MainActivityBinding>(), DownloadServiceLi
             is MangaDetailsController -> {
                 val source = controller.presenter.source as? HttpSource ?: return
                 val url = try {
-                    source.mangaDetailsRequest(controller.presenter.manga).url.toString()
+                    source.getMangaUrl(controller.presenter.manga)
                 } catch (e: Exception) {
                     return
                 }
@@ -903,6 +949,18 @@ open class MainActivity : BaseActivity<MainActivityBinding>(), DownloadServiceLi
     }
 
     private fun pressingBack() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val insets = window.decorView.rootWindowInsets
+            if (insets?.isVisible(WindowInsetsCompat.Type.ime()) == true) {
+                val vic = WindowInsetsControllerCompat(window, binding.root)
+                vic.hide(WindowInsetsCompat.Type.ime())
+                return
+            }
+        }
+        if (actionMode != null) {
+            actionMode?.finish()
+            return
+        }
         if (binding.searchToolbar.hasExpandedActionView() && binding.cardFrame.isVisible) {
             binding.searchToolbar.collapseActionView()
             return
@@ -1184,8 +1242,12 @@ open class MainActivity : BaseActivity<MainActivityBinding>(), DownloadServiceLi
             alphaAnimation.doOnEnd {
                 nav.isVisible = !hideBottomNav
                 binding.bottomView?.visibility =
-                    if (hideBottomNav) View.GONE else binding.bottomView?.visibility
-                        ?: View.GONE
+                    if (hideBottomNav) {
+                        View.GONE
+                    } else {
+                        binding.bottomView?.visibility
+                            ?: View.GONE
+                    }
             }
             alphaAnimation.duration = 200
             alphaAnimation.startDelay = 50
@@ -1335,6 +1397,8 @@ open class MainActivity : BaseActivity<MainActivityBinding>(), DownloadServiceLi
         private const val SWIPE_THRESHOLD = 100
         private const val SWIPE_VELOCITY_THRESHOLD = 100
 
+        const val MAIN_ACTIVITY = "eu.kanade.tachiyomi.ui.main.MainActivity"
+
         // Shortcut actions
         const val SHORTCUT_LIBRARY = "eu.kanade.tachiyomi.SHOW_LIBRARY"
         const val SHORTCUT_RECENTLY_UPDATED = "eu.kanade.tachiyomi.SHOW_RECENTLY_UPDATED"
@@ -1370,6 +1434,10 @@ interface RootSearchInterface {
 }
 
 interface TabbedInterface
+
+interface HingeSupportedController {
+    fun updateForHinge()
+}
 
 interface FloatingSearchInterface {
     fun searchTitle(title: String?): String? {

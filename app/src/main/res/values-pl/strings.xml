@@ -49,10 +49,10 @@
         <item quantity="other">Usunąć %1$d pobranych rozdziałów?</item>
     </plurals>
     <plurals name="chapters_plural">
-        <item quantity="one">%1$d rozdział</item>
-        <item quantity="few">%1$d rozdziały</item>
-        <item quantity="many">%1$d rozdziałów</item>
-        <item quantity="other">%1$d rozdziałów</item>
+        <item quantity="one">%1$s rozdział</item>
+        <item quantity="few">%1$s rozdziały</item>
+        <item quantity="many">%1$s rozdziałów</item>
+        <item quantity="other">%1$s rozdziałów</item>
     </plurals>
     <plurals name="pages_left">
         <item quantity="one">Pozostała %1$d strona</item>
@@ -1050,10 +1050,10 @@
     <string name="check_for_beta_releases">Sprawdź wydania beta</string>
     <string name="try_new_features">Wypróbuj nowe funkcje zanim będą oficjalnie wydane. Wydania beta mogą być niestabilne i są dostarczane by dać feedback developerowi.</string>
     <plurals name="next_unread_chapters">
-        <item quantity="one">Następny nieprzeczytany rozdział%d następnych nieprzeczytanych rozdziałów%d następnych nieprzeczytanych rozdziałów</item>
-        <item quantity="few"/>
-        <item quantity="many"/>
-        <item quantity="other"/>
+        <item quantity="one">Następny nieprzeczytany rozdział</item>
+        <item quantity="few">Następne %d nieprzeczytane rozdziały</item>
+        <item quantity="many">Następne %d nieprzeczytanych rozdziałów</item>
+        <item quantity="other">Następne %d nieprzeczytanych rozdziałów</item>
     </plurals>
     <string name="sort_fetched_time">Sortuj przez czas pobrania</string>
     <string name="reading_list">Lista czytanych</string>
@@ -1096,4 +1096,14 @@
     <string name="warning_unenroll_from_beta">Przywrócenie poprzedniej wersji produkcyjnej może spowodować problemy i wymagać wyczyszczenia danych aplikacji.</string>
     <string name="auto_download_while_reading">Pobieraj podczas czytania</string>
     <string name="downloaded_chapters">Pobrane rozdziały</string>
+    <string name="read_duration">Czas odczytu</string>
+    <string name="statistics">Statystyki</string>
+    <string name="trackers">Trackers</string>
+    <string name="error_user_agent_string_invalid">Nieprawidłowy ciąg agenta użytkownika</string>
+    <string name="skipped_reason_not_always_update">Pominięto, ponieważ aktualizacja nie jest wymagana</string>
+    <string name="skip_dupe_chapters">Pomiń zduplikowane rozdziały</string>
+    <string name="allow_deleting_bookmarked_chapters">Usuwaj rozdziały dodane do zakładek</string>
+    <string name="popular">Popularne</string>
+    <string name="appwidget_updates_description">Zobacz ostatnio zaktualizowane wpisy</string>
+    <string name="appwidget_unavailable_locked">Widżet nie jest dostępny kiedy blokada aplikacji jest włączona</string>
 </resources>

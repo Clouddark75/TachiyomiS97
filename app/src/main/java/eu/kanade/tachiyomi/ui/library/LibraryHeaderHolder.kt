@@ -160,8 +160,16 @@ class LibraryHeaderHolder(val view: View, val adapter: LibraryCategoryAdapter) :
         binding.rearView.updatePadding(top = binding.categoryTitle.marginTop - 6)
         val category = item.category
 
-        binding.categoryTitle.text =
-            if (category.isAlone && !category.isDynamic) { "" } else { category.name } +
+        val isFilteredList = (adapter.libraryListener as? FilteredLibraryController)?.let {
+            it.filterCategories.size == 1 && it.getTitle() == category.name
+        } ?: false
+        val categoryName = if ((category.isAlone || isFilteredList) && !category.isDynamic) {
+            ""
+        } else {
+            category.name
+        }
+
+        binding.categoryTitle.text = categoryName +
             if (adapter.showNumber) {
                 " (${adapter.itemsPerCategory[item.catId]})"
             } else { "" }
@@ -183,8 +191,11 @@ class LibraryHeaderHolder(val view: View, val adapter: LibraryCategoryAdapter) :
         binding.categorySort.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, sortDrawable, 0)
         binding.categorySort.setText(category.sortRes())
         binding.collapseArrow.setImageResource(
-            if (category.isHidden) R.drawable.ic_expand_more_24dp
-            else R.drawable.ic_expand_less_24dp,
+            if (category.isHidden) {
+                R.drawable.ic_expand_more_24dp
+            } else {
+                R.drawable.ic_expand_less_24dp
+            },
         )
         when {
             adapter.mode == SelectableAdapter.Mode.MULTI -> {
@@ -193,7 +204,7 @@ class LibraryHeaderHolder(val view: View, val adapter: LibraryCategoryAdapter) :
                 binding.updateButton.isVisible = false
                 setSelection()
             }
-            (category.id ?: -1) < 0 -> {
+            (category.id ?: -1) < 0 || adapter.libraryListener is FilteredLibraryController -> {
                 binding.collapseArrow.isVisible = false
                 binding.checkbox.isVisible = false
                 setRefreshing(false)
@@ -227,7 +238,9 @@ class LibraryHeaderHolder(val view: View, val adapter: LibraryCategoryAdapter) :
                     "drawable",
                     itemView.context.packageName,
                 ).takeIf { it != 0 }
-            } else null
+            } else {
+                null
+            }
             )
         return flagId
     }
@@ -353,8 +366,11 @@ class LibraryHeaderHolder(val view: View, val adapter: LibraryCategoryAdapter) :
         )
         val tintedDrawable = drawable?.mutate()
         tintedDrawable?.setTint(
-            if (allSelected) contentView.context.getResourceColor(R.attr.colorSecondary)
-            else ContextCompat.getColor(contentView.context, R.color.gray_button),
+            if (allSelected) {
+                contentView.context.getResourceColor(R.attr.colorSecondary)
+            } else {
+                ContextCompat.getColor(contentView.context, R.color.gray_button)
+            },
         )
         binding.checkbox.setImageDrawable(tintedDrawable)
     }

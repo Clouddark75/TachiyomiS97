@@ -4,6 +4,7 @@ import android.content.Context
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.network.interceptor.CloudflareInterceptor
+import eu.kanade.tachiyomi.network.interceptor.UncaughtExceptionInterceptor
 import eu.kanade.tachiyomi.network.interceptor.UserAgentInterceptor
 import okhttp3.Cache
 import okhttp3.OkHttpClient
@@ -31,6 +32,7 @@ class NetworkHelper(val context: Context) {
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)
                 .callTimeout(2, TimeUnit.MINUTES)
+                .addInterceptor(UncaughtExceptionInterceptor())
                 .addInterceptor(userAgentInterceptor)
                 .apply {
                     if (BuildConfig.DEBUG) {

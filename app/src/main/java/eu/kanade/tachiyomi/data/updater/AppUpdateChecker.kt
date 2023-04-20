@@ -31,12 +31,20 @@ class AppUpdateChecker {
                     .newCall(GET("https://api.github.com/repos/$GITHUB_REPO/releases"))
                     .await()
                     .parseAs<List<GithubRelease>>()
-                    .let {
-                        val release = it.firstOrNull() ?: return@let AppUpdateResult.NoNewUpdate
+                    .let { githubReleases ->
+                        val releases = githubReleases.take(10).filter { isNewVersion(it.version) }
+                        // Check if any of the latest versions are newer than the current version
+                        val release = releases
+                            .maxWithOrNull { r1, r2 ->
+                                when {
+                                    r1.version == r2.version -> 0
+                                    isNewVersion(r2.version, r1.version) -> -1
+                                    else -> 1
+                                }
+                            }
                         preferences.lastAppCheck().set(Date().time)
 
-                        // Check if latest version is different from current version
-                        if (isNewVersion(release.version)) {
+                        if (release != null) {
                             AppUpdateResult.NewUpdate(release)
                         } else {
                             AppUpdateResult.NoNewUpdate
@@ -50,7 +58,7 @@ class AppUpdateChecker {
                     .let {
                         preferences.lastAppCheck().set(Date().time)
 
-                        // Check if latest version is different from current version
+                        // Check if latest version is newer than the current version
                         if (isNewVersion(it.version)) {
                             AppUpdateResult.NewUpdate(it)
                         } else {
@@ -71,10 +79,10 @@ class AppUpdateChecker {
         }
     }
 
-    private fun isNewVersion(versionTag: String): Boolean {
+    private fun isNewVersion(versionTag: String, currentVersion: String = BuildConfig.VERSION_NAME): Boolean {
         // Removes prefixes like "r" or "v"
         val newVersion = versionTag.replace("[^\\d.-]".toRegex(), "")
-        val oldVersion = BuildConfig.VERSION_NAME.replace("[^\\d.-]".toRegex(), "")
+        val oldVersion = currentVersion.replace("[^\\d.-]".toRegex(), "")
         val newPreReleaseVer = newVersion.split("-")
         val oldPreReleaseVer = oldVersion.split("-")
         val newSemVer = newPreReleaseVer.first().split(".").map { it.toInt() }
@@ -83,14 +91,29 @@ class AppUpdateChecker {
         oldSemVer.mapIndexed { index, i ->
             if (newSemVer.getOrElse(index) { i } > i) {
                 return true
+            } else if (newSemVer.getOrElse(index) { i } < i) {
+                return false
             }
         }
         // For cases of extreme patch versions (new: 1.2.3.1 vs old: 1.2.3, return true)
         return if (newSemVer.size > oldSemVer.size) {
             true
+        } else if (newSemVer.size < oldSemVer.size) {
+            false
         } else {
-            // For production versions from beta (new: 1.2.3 vs old: 1.2.3-b1, return true)
-            (newPreReleaseVer.getOrNull(1) != null) != (oldPreReleaseVer.getOrNull(1) != null)
+            // If the version numbers match, check the beta versions
+            val newPreVersion =
+                newPreReleaseVer.getOrNull(1)?.replace("[^\\d.-]".toRegex(), "")?.toIntOrNull()
+            val oldPreVersion =
+                oldPreReleaseVer.getOrNull(1)?.replace("[^\\d.-]".toRegex(), "")?.toIntOrNull()
+            when {
+                // For prod, don't bother with betas (current: 1.2.3 vs new: 1.2.3-b1)
+                oldPreVersion == null -> false
+                // For betas, always use prod builds (current: 1.2.3-b1 vs new: 1.2.3)
+                newPreVersion == null -> true
+                // For betas, higher beta ver is newer (current: 1.2.3-b1 vs new: 1.2.3-b2)
+                else -> (oldPreVersion < newPreVersion)
+            }
         }
     }
 }

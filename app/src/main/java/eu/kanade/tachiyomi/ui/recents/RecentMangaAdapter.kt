@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.onEach
 import uy.kohesive.injekt.injectLazy
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class RecentMangaAdapter(val delegate: RecentsInterface) :
     BaseChapterAdapter<IFlexible<*>>(delegate) {
@@ -29,6 +31,7 @@ class RecentMangaAdapter(val delegate: RecentsInterface) :
     var uniformCovers = preferences.uniformGrid().get()
     var showOutline = preferences.outlineOnCovers().get()
     var sortByFetched = preferences.sortFetchedTime().get()
+    var lastUpdatedTime = preferences.libraryUpdateLastTimestamp().get()
     private var collapseGroupedUpdates = preferences.collapseGroupedUpdates().get()
     private var collapseGroupedHistory = preferences.collapseGroupedHistory().get()
     val collapseGrouped: Boolean
@@ -46,6 +49,7 @@ class RecentMangaAdapter(val delegate: RecentsInterface) :
         DecimalFormatSymbols()
             .apply { decimalSeparator = '.' },
     )
+    val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
     init {
         setDisplayHeadersAtStartUp(true)
@@ -66,6 +70,12 @@ class RecentMangaAdapter(val delegate: RecentsInterface) :
                 (recyclerView.findViewHolderForAdapterPosition(i) as? RecentMangaHolder)?.updateCards()
             }
         }
+        preferences.libraryUpdateLastTimestamp().asFlow().onEach {
+            lastUpdatedTime = it
+            if (viewType.isUpdates) {
+                notifyItemChanged(0)
+            }
+        }.launchIn(delegate.scope())
     }
 
     fun getItemByChapterId(id: Long): RecentMangaItem? {

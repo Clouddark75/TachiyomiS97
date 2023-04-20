@@ -23,6 +23,7 @@ import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.ui.main.MainActivity
+import eu.kanade.tachiyomi.util.chapter.ChapterUtil.Companion.preferredChapterName
 import eu.kanade.tachiyomi.util.lang.chop
 import eu.kanade.tachiyomi.util.system.notification
 import eu.kanade.tachiyomi.util.system.notificationBuilder
@@ -109,7 +110,7 @@ class LibraryUpdateNotifier(private val context: Context) {
                 setContentIntent(pendingIntent)
                 setSmallIcon(R.drawable.ic_tachij2k_notification)
                 addAction(
-                    R.drawable.nnf_ic_file_folder,
+                    R.drawable.ic_file_open_24dp,
                     context.getString(R.string.open_log),
                     pendingIntent,
                 )
@@ -144,7 +145,7 @@ class LibraryUpdateNotifier(private val context: Context) {
                 setContentIntent(NotificationHandler.openUrl(context, HELP_SKIPPED_URL))
                 setSmallIcon(R.drawable.ic_tachij2k_notification)
                 addAction(
-                    R.drawable.nnf_ic_file_folder,
+                    R.drawable.ic_file_open_24dp,
                     context.getString(R.string.open_log),
                     NotificationReceiver.openErrorOrSkippedLogPendingActivity(context, uri),
                 )
@@ -172,7 +173,9 @@ class LibraryUpdateNotifier(private val context: Context) {
                 updates.forEach {
                     val manga = it.key
                     val chapters = it.value
-                    val chapterNames = chapters.map { chapter -> chapter.name }
+                    val chapterNames = chapters.map { chapter ->
+                        chapter.preferredChapterName(context, manga, preferences)
+                    }
                     notifications.add(
                         Pair(
                             context.notification(Notifications.CHANNEL_NEW_CHAPTERS) {

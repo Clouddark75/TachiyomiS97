@@ -9,7 +9,7 @@
     <string name="unknown">Nepoznat</string>
     <string name="licensed">Licencirano</string>
     <string name="completed">Završeno</string>
-    <string name="lock_with_biometrics">Zaključaj pomoću biometrije</string>
+    <string name="lock_with_biometrics">Zahtijevaj otključavanje</string>
     <string name="lock_when_idle">Zaključaj prilikom mirovanja</string>
     <plurals name="chapters_plural">
         <item quantity="one">%1$s poglavlje</item>
@@ -59,11 +59,11 @@
     <string name="list">Popis</string>
     <string name="download_badge">Značke preuzimanja</string>
     <string name="new_chapters_found">Pronađena su nova poglavlja</string>
-    <string name="library_update_frequency">Učestalost ažuriranja biblioteke</string>
+    <string name="library_update_frequency">Učestalost aktualiziranja biblioteke</string>
     <string name="library_update_restriction">Ograničenja uređaja</string>
-    <string name="library_update_restriction_summary">Ažuriraj samo kad su ispunjeni uvjeti</string>
-    <string name="categories_to_include_in_global_update">Kategorije koje treba uključiti u globalno ažuriranje</string>
-    <string name="updates">Ažuriranja</string>
+    <string name="library_update_restriction_summary">Aktualiziraj samo kad su ispunjeni uvjeti</string>
+    <string name="categories_to_include_in_global_update">Kategorije koje treba uključiti u globalno aktualiziranje</string>
+    <string name="updates">Aktualiziranja</string>
     <string name="history">Povijest</string>
     <string name="this_will_remove_the_read_date_question">Ovo će ukloniti datum čitanja ovog poglavlja. Je li to stvarno želiš\?</string>
     <string name="no_more_results">Nema daljnjih rezultata</string>
@@ -370,7 +370,7 @@
     <string name="already_in_category">Manga se već nalazi u kategoriji</string>
     <string name="confirm_category_deletion_message">Manga u ovoj kategoriji premjestit će se u standardnu kategoriju.</string>
     <string name="confirm_category_deletion">Izbrisati kategoriju\?</string>
-    <string name="extension_updates">Ažuriranja ekstenzija</string>
+    <string name="extension_updates">Aktualiziranja proširenja</string>
     <string name="last_used">Zadnje korišteno</string>
     <string name="source_hidden">Izvor skriven</string>
     <string name="all_sources">Svi izvori</string>
@@ -385,12 +385,12 @@
     <string name="view_history">Pogledaj povijest</string>
     <string name="reset_all_chapters_for_this_">Obnovi sva poglavlja za %1$s</string>
     <string name="this_will_remove_the_read_date_for_x_question">Ovo će ukloniti datum čitanja za „%1$s”. Je li to stvarno želiš\?</string>
-    <string name="recent_updates">Nedavna ažuriranja</string>
+    <string name="recent_updates">Nedavna aktualiziranja</string>
     <string name="newly_added">Novo dodani</string>
     <string name="recents">Nedavni</string>
     <string name="auto_refresh_covers_summary">Također osvježi naslovnice u biblioteci prilikom aktualiziranja biblioteke</string>
     <string name="auto_refresh_covers">Automatski osvježi naslovnice</string>
-    <string name="include_in_global_update">Uključi u globalno ažuriranje</string>
+    <string name="include_in_global_update">Uključi u globalno aktualiziranje</string>
     <string name="when_sorting_ignore_articles">Prilikom razvrstavanja po abecedi, razvrstaj naslove manga bez člana (engl. a, an, the)</string>
     <string name="sort_by_ignoring_articles">Razvrstaj bez člana</string>
     <plurals name="notification_and_n_more">
@@ -428,7 +428,7 @@
     <string name="enable_zoom_out">Aktiviraj zumiranje</string>
     <string name="webtoon_style">Stil digitalnog stripa</string>
     <string name="reading_">Čita se %1$s</string>
-    <string name="decode_image_error">Nije bilo moguće dekodirati sliku</string>
+    <string name="decode_image_error">Nije bilo moguće učitati sliku</string>
     <string name="page_">Stranica %1$d</string>
     <string name="set_as_default_for_all">Postavi kao standardno za sve</string>
     <string name="added_">Dodano %1$s</string>
@@ -441,7 +441,7 @@
     <string name="compact_grid">Kompaktno</string>
     <string name="comfortable_grid">Popločeno</string>
     <string name="_already_in_queue">%1$s se već nalazi u popisu</string>
-    <string name="adding_category_to_queue">%1$s se dodaje u popis ažuriranja</string>
+    <string name="adding_category_to_queue">%1$s se dodaje u popis aktualiziranja</string>
     <string name="visit_recents_for_download_queue">Za pristup popisu preuzimanja pogledaj karticu nedavnih preuzimanja. Za brži pristup dodirni dvaput ili dodirni i drži</string>
     <string name="no_folders_to_cleanup">Nema mapa za brisanje</string>
     <string name="starting_cleanup">Pokretanje brisanja</string>
@@ -708,9 +708,9 @@
     <string name="automatic_can_still_switch">Prilikom korištenja automatskog prijeloma stranica, i dalje možeš mijenjati prijelome tijekom čitanja bez nadjačavanja ove postavke</string>
     <string name="page_layout">Prijelom stranice</string>
     <string name="switch_to_single">Prebaci na jednostranično</string>
-    <string name="switch_to_double">Prebaci na dvostranično</string>
+    <string name="switch_to_double">Prebaci na duplerice</string>
     <string name="single_page">Jednostranično</string>
-    <string name="double_pages">Dvostranično</string>
+    <string name="double_pages">Duplerice</string>
     <string name="amount_of_pages_to_preload">Količina stranica koju se unaprijed učitavaju za čitanje. Veće vrijednosti omogućuju ugodnije čitanje, ali se troši veća količina predmemorije i mrežnog prometa.</string>
     <string name="page_preload_amount">Količina predučitanih stranica</string>
     <string name="save_second_page">Spremi drugu stranicu</string>
@@ -725,7 +725,7 @@
     <string name="show_reset_history_button">Pokaži gumb za obnavljanje povijesti</string>
     <string name="press_and_hold_to_also_reset">Pritiskanjem gumba i držanjem gumba pritisnuto također može obnoviti povijesti poglavlja</string>
     <string name="grouped">Grupirano</string>
-    <string name="no_recent_read_updated_manga">Nema nedavno pročitanih ili ažuriranih manga</string>
+    <string name="no_recent_read_updated_manga">Nema nedavno pročitanih ili aktualiziranih manga</string>
     <string name="reset_chapter_history">Obnovi povijest poglavlja</string>
     <string name="shift_one_page_over">Pomakni za jednu stranicu</string>
     <string name="category_cannot_be_blank">Ime kategorije ne smije biti prazno</string>
@@ -757,7 +757,7 @@
     <string name="remove_crop">Ukloni odrezivanje</string>
     <string name="crop_borders_webtoon">Odreži rubove (digitalni strip)</string>
     <string name="crop_borders_paged">Odreži rubove (stranice)</string>
-    <string name="invert_double_pages">Obrni duplerice</string>
+    <string name="invert_double_pages">Invertiraj duplerice</string>
     <string name="save_combined_pages">Spremi spojene stranice</string>
     <string name="share_combined_pages">Dijeli spojene stranice</string>
     <string name="changing_will_reset_reading_mode">Mijenjanjem ove opcije obnovit će se modus čitanja za ovu seriju</string>
@@ -808,7 +808,7 @@
 \n
 \nU sljedećem ekranu aktiviraj „Dopusti pristup za upravljanje svim datotekama”.</string>
     <string name="all_files_permission_required">Potrebna su dopuštenja za pristup datotekama</string>
-    <string name="global_updates">Globalna ažuriranja</string>
+    <string name="global_updates">Globalna aktualiziranja</string>
     <string name="open_random_series">Otvaranje slučajne serije</string>
     <string name="show_number_of_items">Prikaži broj elemenata</string>
     <string name="update_completed">Aktualiziranje je završeno</string>
@@ -868,17 +868,17 @@
     <string name="remove_x_from_service_and_add_y">Ukloni %1$s iz %2$s i dodaj %3$s</string>
     <string name="remove_previous_tracker">Ukloniti prethodnu uslugu praćenja\?</string>
     <string name="select_an_entry">Odaberite unos</string>
-    <string name="split_double_pages">Podijelite dvostruke stranice</string>
-    <string name="split_double_pages_portrait">Podijelite dvostruke stranice u portretu</string>
+    <string name="split_double_pages">Podijeli duplerice</string>
+    <string name="split_double_pages_portrait">Podijeli duplerice uspravno</string>
     <plurals name="extensions_updated_plural">
         <item quantity="one">%d proširenje aktualizirano</item>
         <item quantity="few">%d proširenja aktualizirana</item>
         <item quantity="other">%d proširenja aktualizirano</item>
     </plurals>
-    <string name="extensions_updated">Ekstenzije ažurirane</string>
+    <string name="extensions_updated">Proširenja su aktualizirana</string>
     <string name="installed_">Instalirano %1$s</string>
-    <string name="extension_updates_pending">Ažuriranja proširenja na čekanju</string>
-    <string name="affects_library_grid">Utječe na omote mreže knjižnice</string>
+    <string name="extension_updates_pending">Aktualiziranja proširenja na čekanju</string>
+    <string name="affects_library_grid">Utječe na raspored naslovnica knjižnice</string>
     <string name="restrictions_">Restrikcije: %1$s</string>
     <string name="getting_started_guide">Početni vodič</string>
     <string name="no_matches_for_filters_short">Nema podudaranja za vaše filtre</string>
@@ -898,9 +898,9 @@
     <string name="teal_ocean">Tirkizni ocean</string>
     <string name="appearance">Izgled</string>
     <plurals name="missing_chapters_warning">
-        <item quantity="one">Preskače se %d poglavlje. Izvor ga nema ili je izdvojen filtrom</item>
-        <item quantity="few">Preskaču se %d poglavlja. Izvor ih nema ili su izdvojeni filtrom</item>
-        <item quantity="other">Preskaču se %d poglavlja. Izvor ih nema ili su izdvojeni filtrom</item>
+        <item quantity="one">Preskače se %d poglavlje. Ne postoji u izvoru ili je filtrirano</item>
+        <item quantity="few">Preskaču se %d poglavlja. Ne postoje u izvoru ili su filtrirana</item>
+        <item quantity="other">Preskače se %d poglavlja. Ne postoje u izvoru ili su filtrirana</item>
     </plurals>
     <string name="log_out">Odjava</string>
     <string name="log_out_from_">Odjaviti se iz %1$s\?</string>
@@ -928,7 +928,7 @@
     <string name="save_chapters_as_cbz">Spremi kao CBZ arhivu</string>
     <string name="publishing_finished">Objavljivanje završeno</string>
     <string name="cancelled">Prekinuto</string>
-    <string name="on_hiatus">Prekid</string>
+    <string name="on_hiatus">Zaustavljeno</string>
     <string name="tracking_info">Jednosmjerna sinkronizacija za aktualiziranje napretka poglavlja u usluzi praćenja. Postavi praćenje pojedinačnih unosa manga putem gumba za praćenje.</string>
     <string name="enhanced_services">Poboljšane usluge</string>
     <string name="enhanced_tracking_info">Usluge koje pružaju poboljšane funkcije za određene izvore. Manga se automatski prati kad se doda u tvoju biblioteku.</string>
@@ -994,7 +994,7 @@
     </plurals>
     <string name="download_ahead">Preuzmi unaprijed</string>
     <string name="webview_data_deleted">WebView podaci su izbrisani</string>
-    <string name="download_notifier_split_page_not_found">Stranica %d nije pronađena tijekom razdvajanja</string>
+    <string name="download_notifier_split_page_not_found">Stranica %d nije pronađena tijekom rastavljanja</string>
     <string name="split_tall_images">Rastavi visoke slike</string>
     <string name="learn_why">Saznaj zašto</string>
     <string name="sort_fetched_time">Razvrstaj po vremenu dohvaćanja</string>
@@ -1073,14 +1073,23 @@
         <item quantity="other">%d jezika</item>
     </plurals>
     <string name="read_duration_info">Provedeno vrijeme u čitaču, na temelju povijesti poglavlja</string>
-    <string name="skipped_reason_not_always_update">Preskočeno jer serija ne zahtijeva ažuriranje</string>
+    <string name="skipped_reason_not_always_update">Preskočeno jer serija ne zahtijeva aktualiziranja</string>
     <string name="error_user_agent_string_invalid">Nevažeći niz korisničkog agenta</string>
     <string name="popular">Popularni</string>
     <string name="skip_dupe_chapters">Preskoči dupla poglavlja</string>
     <string name="allow_deleting_bookmarked_chapters">Dozvoli brisanje označenih poglavlja</string>
-    <string name="appwidget_updates_description">Pogledajte nedavno ažurirane unose u biblioteci</string>
+    <string name="appwidget_updates_description">Pogledajte nedavno aktualizirane unose u biblioteci</string>
     <string name="appwidget_unavailable_locked">Widget nije dostupan kada je omogućeno zaključavanje aplikacije</string>
     <string name="mean_tracking_score">Prosječna ocjena praćenja</string>
     <string name="hide_in_library_items">Sakrij unose koji se već nalaze u biblioteci</string>
     <string name="failed_to_update_">Neuspjelo aktualiziranje %1$s</string>
+    <string name="by_series">Po serijama</string>
+    <string name="by_week">Po tjednu</string>
+    <string name="by_day">Po danu</string>
+    <string name="show_more_chapters">Pokaži još poglavlja</string>
+    <string name="collapse_grouped_chapters">Sklopi grupirana poglavlja</string>
+    <string name="updates_last_update_info">Zadnje aktualiziranje biblioteke: %s</string>
+    <string name="gray_background">Siva</string>
+    <string name="app_updates">Aktualiziranja aplikacije</string>
+    <string name="open">Otvori</string>
 </resources>

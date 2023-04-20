@@ -228,7 +228,7 @@
     <string name="cover_updated">Обкладинку оновлено</string>
     <string name="page_">Сторінка %1$d</string>
     <string name="next_chapter_not_found">Наступну главу не знайдено</string>
-    <string name="decode_image_error">Зображення не може бути декодовано</string>
+    <string name="decode_image_error">Зображення не вдалося завантажити</string>
     <string name="use_image_as_cover">Ви бажаєте встановити цю картинку як обкладинку\?</string>
     <string name="finished_chapter">Завершено:</string>
     <string name="current_chapter">Поточна:</string>
@@ -270,7 +270,7 @@
     <string name="dodge_lighten">Світліше</string>
     <string name="burn_darken">Темніше</string>
     <string name="help">Допомога</string>
-    <string name="lock_with_biometrics">Біометричне блокування</string>
+    <string name="lock_with_biometrics">Потрібно розблокувати</string>
     <string name="lock_when_idle">Блокувати в режимі очікування</string>
     <string name="creating_backup">Створення резервної копії</string>
     <string name="network">Мережа</string>
@@ -991,7 +991,7 @@
     <string name="skipped_reason_not_started">Пропущено, оскільки серія не почата</string>
     <string name="channel_skipped">Пропущено</string>
     <string name="pref_library_update_manga_restriction">Пропускати оновлення</string>
-    <string name="pref_update_only_completely_read">Є непрочитані глави</string>
+    <string name="pref_update_only_completely_read">Є непрочитана(ні) глава(и)</string>
     <string name="pref_update_only_non_completed">З статусом \"Завершено\"</string>
     <string name="pref_update_only_started">Серія не почата</string>
     <string name="view_all">Переглянути все</string>
@@ -1114,4 +1114,11 @@
     <string name="failed_to_update_">Не вдалося оновити %1$s</string>
     <string name="show_more_chapters">Показати більше розділів</string>
     <string name="collapse_grouped_chapters">Згорнути згруповані розділи</string>
+    <string name="by_series">За серіями</string>
+    <string name="by_week">По тижнях</string>
+    <string name="by_day">По днях</string>
+    <string name="updates_last_update_info">Останнє оновлення бібліотеки: %s</string>
+    <string name="gray_background">Сірий</string>
+    <string name="app_updates">Оновлення застосунку</string>
+    <string name="open">Відкрито</string>
 </resources>

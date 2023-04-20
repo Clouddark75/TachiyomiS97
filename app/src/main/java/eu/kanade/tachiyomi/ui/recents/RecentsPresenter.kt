@@ -67,7 +67,7 @@ class RecentsPresenter(
     private var shouldMoveToTop = false
     var viewType: RecentsViewType = RecentsViewType.valueOf(preferences.recentsViewType().get())
         private set
-    var groupHistory: Boolean = preferences.groupChaptersHistory().get()
+    var groupHistory: GroupType = preferences.groupChaptersHistory().get()
         private set
     val expandedSectionsMap = mutableMapOf<String, Boolean>()
     val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
@@ -146,7 +146,7 @@ class RecentsPresenter(
             setDownloadedChapters(recentItems)
             if (customViewType == null) {
                 withContext(Dispatchers.Main) {
-                    controller?.showLists(recentItems, false)
+                    view?.showLists(recentItems, false)
                     isLoading = false
                 }
             }
@@ -173,12 +173,28 @@ class RecentsPresenter(
                 ).executeOnIO()
             }
             RecentsViewType.History -> {
-                val items = db.getHistoryUngrouped(
-                    query,
-                    if (isCustom) ENDLESS_LIMIT else pageOffset,
-                    !updatePageCount && !isOnFirstPage,
-                )
-                if (groupChaptersHistory) {
+                val items = if (groupChaptersHistory == GroupType.BySeries) {
+                    db.getRecentMangaLimit(
+                        query,
+                        if (isCustom) ENDLESS_LIMIT else pageOffset,
+                        !updatePageCount && !isOnFirstPage,
+                    )
+                } else {
+                    db.getHistoryUngrouped(
+                        query,
+                        if (isCustom) ENDLESS_LIMIT else pageOffset,
+                        !updatePageCount && !isOnFirstPage,
+                    )
+                }
+                if (groupChaptersHistory.isByTime) {
+                    dateFormat.applyPattern(
+                        when (groupChaptersHistory) {
+                            GroupType.ByWeek -> "yyyy-w"
+                            else -> "yyyy-MM-dd"
+                        },
+                    )
+                    val dayOfWeek = Calendar.getInstance().get(Calendar.DAY_OF_WEEK) % 7 + 1
+                    dateFormat.calendar.firstDayOfWeek = dayOfWeek
                     items.executeOnIO().groupBy {
                         val date = it.history.last_read
                         it.manga.id to if (date <= 0L) "-1" else dateFormat.format(Date(date))
@@ -190,7 +206,12 @@ class RecentsPresenter(
                             }.filterChaptersByScanlators(manga)
                             extraCount += mchs.size - chapters.size
                             if (chapters.isEmpty()) return@mapNotNull null
-                            val existingItem = recentItems.takeLast(ENDLESS_LIMIT).find {
+                            val lastAmount = if (groupChaptersHistory == GroupType.ByDay) {
+                                ENDLESS_LIMIT
+                            } else {
+                                recentItems.size
+                            }
+                            val existingItem = recentItems.takeLast(lastAmount).find {
                                 val date = Date(it.mch.history.last_read)
                                 key == it.manga_id to dateFormat.format(date)
                             }?.takeIf { updatePageCount }
@@ -210,6 +231,9 @@ class RecentsPresenter(
                 }
             }
             RecentsViewType.Updates -> {
+                dateFormat.applyPattern("yyyy-MM-dd")
+                dateFormat.calendar.firstDayOfWeek =
+                    Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
                 db.getRecentChapters(
                     query,
                     if (isCustom) ENDLESS_LIMIT else pageOffset,
@@ -378,7 +402,7 @@ class RecentsPresenter(
             setDownloadedChapters(recentItems)
             if (customViewType == null) {
                 withContext(Dispatchers.Main) {
-                    controller?.showLists(recentItems, hasNewItems, shouldMoveToTop)
+                    view?.showLists(recentItems, hasNewItems, shouldMoveToTop)
                     isLoading = false
                     shouldMoveToTop = false
                 }
@@ -497,15 +521,15 @@ class RecentsPresenter(
                 this.download = download
             }
         }
-        presenterScope.launchUI { controller?.updateChapterDownload(download) }
+        presenterScope.launchUI { view?.updateChapterDownload(download) }
     }
 
     override fun updateDownloads() {
         presenterScope.launch {
             setDownloadedChapters(recentItems)
             withContext(Dispatchers.Main) {
-                controller?.showLists(recentItems, true)
-                controller?.updateDownloadStatus(!downloadManager.isPaused())
+                view?.showLists(recentItems, true)
+                view?.updateDownloadStatus(!downloadManager.isPaused())
             }
         }
     }
@@ -513,7 +537,7 @@ class RecentsPresenter(
     override fun downloadStatusChanged(downloading: Boolean) {
         presenterScope.launch {
             withContext(Dispatchers.Main) {
-                controller?.updateDownloadStatus(downloading)
+                view?.updateDownloadStatus(downloading)
             }
         }
     }
@@ -521,10 +545,10 @@ class RecentsPresenter(
     override fun onUpdateManga(manga: Manga?) {
         when {
             manga == null -> {
-                presenterScope.launchUI { controller?.setRefreshing(false) }
+                presenterScope.launchUI { view?.setRefreshing(false) }
             }
             manga.source == LibraryUpdateService.STARTING_UPDATE_SOURCE -> {
-                presenterScope.launchUI { controller?.setRefreshing(true) }
+                presenterScope.launchUI { view?.setRefreshing(true) }
             }
             else -> {
                 getRecents()
@@ -564,7 +588,7 @@ class RecentsPresenter(
                 }
             }
 
-            controller?.showLists(recentItems, true)
+            view?.showLists(recentItems, true)
         }
     }
 
@@ -656,10 +680,20 @@ class RecentsPresenter(
         presenterScope.launchIO {
             db.deleteHistory().executeAsBlocking()
             withUIContext {
-                controller?.activity?.toast(R.string.clear_history_completed)
+                view?.activity?.toast(R.string.clear_history_completed)
                 getRecents()
             }
         }
+    }
+
+    enum class GroupType {
+        BySeries,
+        ByWeek,
+        ByDay,
+        Never,
+        ;
+
+        val isByTime get() = this == ByWeek || this == ByDay
     }
 
     companion object {

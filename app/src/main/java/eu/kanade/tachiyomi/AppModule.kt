@@ -39,8 +39,7 @@ class AppModule(val app: Application) : InjektModule {
 
         addSingletonFactory { JavaScriptEngine(app) }
 
-        addSingletonFactory { SourceManager(app).also { get<ExtensionManager>().init(it) } }
-
+        addSingletonFactory { SourceManager(app, get()) }
         addSingletonFactory { ExtensionManager(app) }
 
         addSingletonFactory { DownloadManager(app) }
@@ -49,7 +48,12 @@ class AppModule(val app: Application) : InjektModule {
 
         addSingletonFactory { TrackManager(app) }
 
-        addSingletonFactory { Json { ignoreUnknownKeys = true } }
+        addSingletonFactory {
+            Json {
+                ignoreUnknownKeys = true
+                explicitNulls = false
+            }
+        }
 
         addSingletonFactory { ChapterFilter() }
 

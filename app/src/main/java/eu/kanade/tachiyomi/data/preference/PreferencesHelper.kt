@@ -23,6 +23,7 @@ import eu.kanade.tachiyomi.ui.reader.settings.ReaderBottomButton
 import eu.kanade.tachiyomi.ui.reader.settings.ReadingModeType
 import eu.kanade.tachiyomi.ui.reader.viewer.ViewerNavigation
 import eu.kanade.tachiyomi.ui.recents.RecentMangaAdapter
+import eu.kanade.tachiyomi.ui.recents.RecentsPresenter
 import eu.kanade.tachiyomi.util.system.Themes
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -262,6 +263,8 @@ class PreferencesHelper(val context: Context) {
 
     fun libraryUpdateInterval() = flowPrefs.getInt(Keys.libraryUpdateInterval, 24)
 
+    fun libraryUpdateLastTimestamp() = flowPrefs.getLong("library_update_last_timestamp", 0L)
+
     fun libraryUpdateDeviceRestriction() = flowPrefs.getStringSet("library_update_restriction", setOf(DEVICE_ONLY_ON_WIFI))
 
     fun libraryUpdateMangaRestriction() = flowPrefs.getStringSet("library_update_manga_restriction", setOf(MANGA_HAS_UNREAD, MANGA_NON_COMPLETED, MANGA_NON_READ))
@@ -377,9 +380,9 @@ class PreferencesHelper(val context: Context) {
 
     fun collapseGroupedUpdates() = flowPrefs.getBoolean("group_chapters_updates", false)
 
-    fun groupChaptersHistory() = flowPrefs.getBoolean(Keys.groupChaptersHistory, true)
+    fun groupChaptersHistory() = flowPrefs.getEnum("group_chapters_history_type", RecentsPresenter.GroupType.ByWeek)
 
-    fun collapseGroupedHistory() = flowPrefs.getBoolean("collapse_group_history", false)
+    fun collapseGroupedHistory() = flowPrefs.getBoolean("collapse_group_history", true)
 
     fun showTitleFirstInRecents() = flowPrefs.getBoolean(Keys.showTitleFirstInRecents, false)
 

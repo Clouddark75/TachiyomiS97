@@ -821,15 +821,15 @@ open class MainActivity : BaseActivity<MainActivityBinding>(), DownloadServiceLi
     }
 
     fun getExtensionUpdates(force: Boolean) {
-        if ((force && extensionManager.availableExtensions.isEmpty()) ||
+        if ((force && extensionManager.availableExtensionsFlow.value.isEmpty()) ||
             Date().time >= preferences.lastExtCheck().get() + TimeUnit.HOURS.toMillis(6)
         ) {
             lifecycleScope.launch(Dispatchers.IO) {
                 try {
-                    extensionManager.findAvailableExtensionsAsync()
+                    extensionManager.findAvailableExtensions()
                     val pendingUpdates = ExtensionGithubApi().checkForUpdates(
                         this@MainActivity,
-                        extensionManager.availableExtensions.takeIf { it.isNotEmpty() },
+                        extensionManager.availableExtensionsFlow.value.takeIf { it.isNotEmpty() },
                     )
                     preferences.extensionUpdatesCount().set(pendingUpdates.size)
                     preferences.lastExtCheck().set(Date().time)
@@ -950,23 +950,18 @@ open class MainActivity : BaseActivity<MainActivityBinding>(), DownloadServiceLi
     }
 
     private fun pressingBack() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val insets = window.decorView.rootWindowInsets
-            if (insets?.isVisible(WindowInsetsCompat.Type.ime()) == true) {
-                val vic = WindowInsetsControllerCompat(window, binding.root)
-                vic.hide(WindowInsetsCompat.Type.ime())
-                return
-            }
-        }
-        if (actionMode != null) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ViewCompat.getRootWindowInsets(window.decorView)
+                ?.isVisible(WindowInsetsCompat.Type.ime()) == true
+        ) {
+            WindowInsetsControllerCompat(window, binding.root).hide(WindowInsetsCompat.Type.ime())
+        } else if (actionMode != null) {
             actionMode?.finish()
-            return
-        }
-        if (binding.searchToolbar.hasExpandedActionView() && binding.cardFrame.isVisible) {
+        } else if (binding.searchToolbar.hasExpandedActionView() && binding.cardFrame.isVisible) {
             binding.searchToolbar.collapseActionView()
-            return
+        } else {
+            backPress()
         }
-        backPress()
     }
 
     override fun finish() {

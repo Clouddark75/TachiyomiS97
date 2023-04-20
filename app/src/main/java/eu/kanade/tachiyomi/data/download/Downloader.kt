@@ -21,6 +21,7 @@ import eu.kanade.tachiyomi.source.SourceManager
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.source.online.fetchAllImageUrlsFromPageList
+import eu.kanade.tachiyomi.util.chapter.ChapterUtil.Companion.preferredChapterName
 import eu.kanade.tachiyomi.util.lang.RetryWithDelay
 import eu.kanade.tachiyomi.util.lang.plusAssign
 import eu.kanade.tachiyomi.util.storage.DiskUtil
@@ -324,9 +325,10 @@ class Downloader(
         }
 
         val availSpace = DiskUtil.getAvailableStorageSpace(mangaDir)
+        val chapName = download.chapter.preferredChapterName(context, download.manga, preferences)
         if (availSpace != -1L && availSpace < MIN_DISK_SPACE) {
             download.status = Download.State.ERROR
-            notifier.onError(context.getString(R.string.couldnt_download_low_space), download.chapter.name)
+            notifier.onError(context.getString(R.string.couldnt_download_low_space), chapName)
             return@defer Observable.just(download)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
@@ -339,7 +341,7 @@ class Downloader(
 
             notifier.onError(
                 context.getString(R.string.external_storage_download_notice),
-                download.chapter.name,
+                chapName,
                 download.manga.title,
                 intent,
             )
@@ -391,7 +393,7 @@ class Downloader(
             .onErrorReturn { error ->
                 Timber.e(error)
                 download.status = Download.State.ERROR
-                notifier.onError(error.message, download.chapter.name, download.manga.title)
+                notifier.onError(error.message, chapName, download.manga.title)
                 download
             }
     }
@@ -432,12 +434,13 @@ class Downloader(
             else -> downloadImage(page, download.source, tmpDir, filename)
         }
 
+        val chapName = download.chapter.preferredChapterName(context, download.manga, preferences)
         return pageObservable
             // When the page is ready, set page path, progress (just in case) and status
             .doOnNext { file ->
                 val success = splitTallImageIfNeeded(page, tmpDir)
                 if (success.not()) {
-                    notifier.onError(context.getString(R.string.download_notifier_split_failed), download.chapter.name, download.manga.title)
+                    notifier.onError(context.getString(R.string.download_notifier_split_failed), chapName, download.manga.title)
                 }
                 page.uri = file.uri
                 page.progress = 100
@@ -449,7 +452,7 @@ class Downloader(
             .onErrorReturn {
                 page.progress = 0
                 page.status = Page.State.ERROR
-                notifier.onError(it.message, download.chapter.name, download.manga.title)
+                notifier.onError(it.message, chapName, download.manga.title)
                 page
             }
     }

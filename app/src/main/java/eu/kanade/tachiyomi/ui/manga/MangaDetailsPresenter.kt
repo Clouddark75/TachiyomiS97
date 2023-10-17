@@ -15,14 +15,14 @@ import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.database.DatabaseHelper
 import eu.kanade.tachiyomi.data.database.models.Category
 import eu.kanade.tachiyomi.data.database.models.Chapter
+import eu.kanade.tachiyomi.data.database.models.History
 import eu.kanade.tachiyomi.data.database.models.Manga
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.data.download.model.DownloadQueue
 import eu.kanade.tachiyomi.data.library.CustomMangaManager
-import eu.kanade.tachiyomi.data.library.LibraryServiceListener
-import eu.kanade.tachiyomi.data.library.LibraryUpdateService
+import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.track.EnhancedTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
@@ -58,6 +58,9 @@ import eu.kanade.tachiyomi.widget.TriStateCheckBox
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -78,7 +81,7 @@ class MangaDetailsPresenter(
     val db: DatabaseHelper = Injekt.get(),
     private val downloadManager: DownloadManager = Injekt.get(),
     chapterFilter: ChapterFilter = Injekt.get(),
-) : BaseCoroutinePresenter<MangaDetailsController>(), DownloadQueue.DownloadListener, LibraryServiceListener {
+) : BaseCoroutinePresenter<MangaDetailsController>(), DownloadQueue.DownloadListener {
 
     private val customMangaManager: CustomMangaManager by injectLazy()
     private val mangaShortcutManager: MangaShortcutManager by injectLazy()
@@ -103,6 +106,9 @@ class MangaDetailsPresenter(
     var allChapters: List<ChapterItem> = emptyList()
         private set
 
+    var allHistory: List<History> = emptyList()
+        private set
+
     val headerItem by lazy { MangaHeaderItem(manga, view?.fromCatalogue == true) }
     var tabletChapterHeaderItem: MangaHeaderItem? = null
     var allChapterScanlators: Set<String> = emptySet()
@@ -113,10 +119,12 @@ class MangaDetailsPresenter(
             tabletChapterHeaderItem = MangaHeaderItem(manga, false)
             tabletChapterHeaderItem?.isChapterHeader = true
         }
-        isLockedFromSearch = controller.shouldLockIfNeeded && SecureActivityDelegate.shouldBeLocked()
+        isLockedFromSearch =
+            controller.shouldLockIfNeeded && SecureActivityDelegate.shouldBeLocked()
         headerItem.isLocked = isLockedFromSearch
         downloadManager.addListener(this)
-        LibraryUpdateService.setListener(this)
+        LibraryUpdateJob.updateFlow.filter { it == manga.id }
+            .onEach(::onUpdateManga).launchIn(presenterScope)
         tracks = db.getTracks(manga).executeAsBlocking()
         if (manga.isLocal()) {
             refreshAll()
@@ -138,7 +146,6 @@ class MangaDetailsPresenter(
     override fun onDestroy() {
         super.onDestroy()
         downloadManager.removeListener(this)
-        LibraryUpdateService.removeListener(this)
     }
 
     fun fetchChapters(andTracking: Boolean = true) {
@@ -163,6 +170,9 @@ class MangaDetailsPresenter(
         // Store the last emission
         allChapters = chapters
         this.chapters = applyChapterFilters(chapters)
+        presenterScope.launchIO {
+            allHistory = manga.id?.let { db.getHistoryByMangaId(it).executeOnIO() }.orEmpty()
+        }
     }
 
     /**
@@ -694,11 +704,7 @@ class MangaDetailsPresenter(
         }
     }
 
-    override fun onUpdateManga(manga: Manga?) {
-        if (manga?.id == this.manga.id) {
-            fetchChapters()
-        }
-    }
+    private fun onUpdateManga(mangaId: Long?) = fetchChapters()
 
     fun shareManga() {
         val context = Injekt.get<Application>()

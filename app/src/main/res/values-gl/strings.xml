@@ -517,4 +517,15 @@
     <string name="hide_bottom_nav">Ocultar automaticamente a barra de navegación</string>
     <string name="follow_system_theme">Seguir o tema do sistema</string>
     <string name="by_default_side_nav_info">Por defecto, a navegación lateral utilízase en certos teléfonos e tabletas pequenas cando están en horizontal e sempre se mostra en tabletas máis grandes</string>
+    <string name="decode_image_error">Non se puido cargar a imaxe</string>
+    <plurals name="missing_chapters_warning">
+        <item quantity="one">Saltouse %d capítulo: falta na fonte ou ignorouse</item>
+        <item quantity="other">Saltáronse %d capítulos: faltan na fonte ou ignoráronse</item>
+    </plurals>
+    <string name="_per_row">%d por fila</string>
+    <string name="hide_in_library_items">Ocultar elementos que xa estén na biblioteca</string>
+    <string name="grid_size">Tamaño da reixa</string>
+    <string name="app_updates">Actualizacións da aplicación</string>
+    <string name="gray_background">Gris</string>
+    <string name="pref_remove_exclude_categories">Categorías excluídas</string>
 </resources>

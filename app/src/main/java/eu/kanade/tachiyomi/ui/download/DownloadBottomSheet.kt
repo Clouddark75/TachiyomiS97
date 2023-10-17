@@ -18,7 +18,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.download.DownloadService
+import eu.kanade.tachiyomi.data.download.DownloadJob
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.data.preference.PreferenceKeys
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
@@ -104,9 +104,8 @@ class DownloadBottomSheet @JvmOverloads constructor(
         }
         binding.downloadFab.setOnClickListener {
             if (controller.presenter.downloadManager.isPaused()) {
-                DownloadService.start(context)
+                DownloadJob.start(context)
             } else {
-                DownloadService.stop(context)
                 presenter.pauseDownloads()
             }
             updateFab()
@@ -244,11 +243,9 @@ class DownloadBottomSheet @JvmOverloads constructor(
     }
 
     fun onOptionsItemSelected(item: MenuItem): Boolean {
-        val context = activity ?: return false
         when (item.itemId) {
             R.id.clear_queue -> {
-                DownloadService.stop(context)
-                presenter.clearQueue()
+                presenter.stopDownloads()
             }
             R.id.newest, R.id.oldest -> {
                 reorderQueue({ it.download.chapter.date_upload }, item.itemId == R.id.newest)

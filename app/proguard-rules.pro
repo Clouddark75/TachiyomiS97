@@ -1,19 +1,34 @@
 -dontobfuscate
 
-# Keep extension's common dependencies
 -keep class eu.kanade.tachiyomi.source.** { public protected *; } # Avoid access modification
--keep,allowoptimization class eu.kanade.tachiyomi.** { public protected *; }
+-keep,allowoptimization class eu.kanade.** { public protected *; }
+-keep,allowoptimization class tachiyomi.** { public protected *; }
 -keep,allowoptimization class androidx.preference.** { *; }
+
+# Keep common dependencies used in extensions
+-keep,allowoptimization class androidx.preference.** { public protected *; }
 -keep,allowoptimization class kotlin.** { public protected *; }
 -keep,allowoptimization class kotlinx.coroutines.** { public protected *; }
+-keep,allowoptimization class kotlinx.serialization.** { public protected *; }
 -keep,allowoptimization class okhttp3.** { public protected *; }
 -keep,allowoptimization class okio.** { public protected *; }
 -keep,allowoptimization class rx.** { public protected *; }
 -keep,allowoptimization class org.jsoup.** { public protected *; }
--keep,allowoptimization class com.google.gson.** { public protected *; }
 -keep,allowoptimization class app.cash.quickjs.** { public protected *; }
 -keep,allowoptimization class uy.kohesive.injekt.** { public protected *; }
 -keep,allowoptimization class eu.davidea.flexibleadapter.** { public protected *; }
+
+# From extensions-lib
+-keep,allowoptimization class eu.kanade.tachiyomi.network.interceptor.RateLimitInterceptorKt { public protected *; }
+-keep,allowoptimization class eu.kanade.tachiyomi.network.interceptor.SpecificHostRateLimitInterceptorKt { public protected *; }
+-keep,allowoptimization class eu.kanade.tachiyomi.network.NetworkHelper { public protected *; }
+-keep,allowoptimization class eu.kanade.tachiyomi.network.OkHttpExtensionsKt { public protected *; }
+-keep,allowoptimization class eu.kanade.tachiyomi.network.RequestsKt { public protected *; }
+-keep,allowoptimization class eu.kanade.tachiyomi.AppInfo { public protected *; }
+
+-keep class com.hippo.image.** { *; }
+-keep interface com.hippo.image.** { *; }
+-dontwarn nucleus.view.NucleusActionBarActivity
 
 # Design library
 -dontwarn com.google.android.material.**
@@ -21,23 +36,7 @@
 -keep interface com.google.android.material.** { *; }
 -keep public class com.google.android.material.R$* { *; }
 
--keep class com.hippo.image.** { *; }
--keep interface com.hippo.image.** { *; }
--dontwarn nucleus.view.NucleusActionBarActivity
-
-# Extensions may require methods unused in the core app
--keep class org.jsoup.** { *; }
--keep class kotlin.** { *; }
--keep class okhttp3.** { *; }
-
-
-# OkHttp
--dontwarn okhttp3.**
--dontwarn okio.**
--dontwarn javax.annotation.**
-
-
-# RxJava 1.1.0
+##---------------Begin: proguard configuration for RxJava 1.x  ----------
 -dontwarn sun.misc.**
 
 -keepclassmembers class rx.internal.util.unsafe.*ArrayQueue*Field* {
@@ -68,11 +67,11 @@
     kotlinx.serialization.KSerializer serializer(...);
 }
 
--keep,includedescriptorclasses class eu.kanade.tachiyomi.**$$serializer { *; }
--keepclassmembers class eu.kanade.tachiyomi.** {
+-keep,includedescriptorclasses class eu.kanade.**$$serializer { *; }
+-keepclassmembers class eu.kanade.** {
     *** Companion;
 }
--keepclasseswithmembers class eu.kanade.tachiyomi.** {
+-keepclasseswithmembers class eu.kanade.** {
     kotlinx.serialization.KSerializer serializer(...);
 }
 
@@ -81,3 +80,7 @@
     <methods>;
 }
 ##---------------End: proguard configuration for kotlinx.serialization  ----------
+
+# Firebase
+-keep class com.google.firebase.installations.** { *; }
+-keep interface com.google.firebase.installations.** { *; }

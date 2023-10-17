@@ -11,6 +11,7 @@ import android.view.MenuItem
 import android.view.RoundedCorner
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.BackEventCompat
 import androidx.core.view.WindowInsetsCompat.Type.systemBars
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
@@ -29,14 +30,14 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.backup.BackupRestoreService
+import eu.kanade.tachiyomi.data.backup.BackupRestoreJob
 import eu.kanade.tachiyomi.data.database.models.Chapter
 import eu.kanade.tachiyomi.data.database.models.ChapterHistory
 import eu.kanade.tachiyomi.data.database.models.History
 import eu.kanade.tachiyomi.data.database.models.Manga
-import eu.kanade.tachiyomi.data.download.DownloadService
+import eu.kanade.tachiyomi.data.download.DownloadJob
 import eu.kanade.tachiyomi.data.download.model.Download
-import eu.kanade.tachiyomi.data.library.LibraryUpdateService
+import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.databinding.RecentsControllerBinding
@@ -120,6 +121,7 @@ class RecentsController(bundle: Bundle? = null) :
     private var headerHeight = 0
     private var ogRadius = 0f
     private var deviceRadius = 0f to 0f
+    private var lastScale = 1f
 
     private var query = ""
         set(value) {
@@ -278,6 +280,17 @@ class RecentsController(bundle: Bundle? = null) :
                     if (!isControllerVisible) {
                         return
                     }
+                    binding.downloadBottomSheet.root.apply {
+                        if (lastScale != 1f && scaleY != 1f) {
+                            val scaleProgress = ((1f - progress) * (1f - lastScale)) + lastScale
+                            scaleX = scaleProgress
+                            scaleY = scaleProgress
+                            for (i in 0 until childCount) {
+                                val childView = getChildAt(i)
+                                childView.scaleY = scaleProgress
+                            }
+                        }
+                    }
                     if (isControllerVisible) {
                         activityBinding?.appBar?.alpha = (1 - progress * 3) + 0.5f
                     }
@@ -304,6 +317,25 @@ class RecentsController(bundle: Bundle? = null) :
                         activityBinding?.tabsFrameLayout?.isVisible =
                             state != BottomSheetBehavior.STATE_EXPANDED
                     }
+                    binding.downloadBottomSheet.dlBottomSheet.apply {
+                        if ((
+                            state == BottomSheetBehavior.STATE_COLLAPSED ||
+                                state == BottomSheetBehavior.STATE_EXPANDED ||
+                                state == BottomSheetBehavior.STATE_HIDDEN
+                            ) &&
+                            scaleY != 1f
+                        ) {
+                            scaleX = 1f
+                            scaleY = 1f
+                            pivotY = 0f
+                            translationX = 0f
+                            for (i in 0 until childCount) {
+                                val childView = getChildAt(i)
+                                childView.scaleY = 1f
+                            }
+                        }
+                    }
+
                     if (state == BottomSheetBehavior.STATE_COLLAPSED) {
                         if (hasQueue()) {
                             binding.downloadBottomSheet.dlBottomSheet.sheetBehavior?.isHideable =
@@ -343,9 +375,9 @@ class RecentsController(bundle: Bundle? = null) :
                 }
             },
         )
-        binding.swipeRefresh.isRefreshing = LibraryUpdateService.isRunning()
+        binding.swipeRefresh.isRefreshing = LibraryUpdateJob.isRunning(view.context)
         binding.swipeRefresh.setOnRefreshListener {
-            if (!LibraryUpdateService.isRunning()) {
+            if (!LibraryUpdateJob.isRunning(view.context)) {
                 snack?.dismiss()
                 snack = view.snack(R.string.updating_library) {
                     anchorView =
@@ -355,7 +387,7 @@ class RecentsController(bundle: Bundle? = null) :
                             activityBinding?.bottomNav ?: binding.downloadBottomSheet.root
                         }
                     setAction(R.string.cancel) {
-                        LibraryUpdateService.stop(context)
+                        LibraryUpdateJob.stop(context)
                         viewScope.launchUI {
                             NotificationReceiver.dismissNotification(
                                 context,
@@ -367,12 +399,12 @@ class RecentsController(bundle: Bundle? = null) :
                         object : BaseTransientBottomBar.BaseCallback<Snackbar>() {
                             override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
                                 super.onDismissed(transientBottomBar, event)
-                                binding.swipeRefresh.isRefreshing = LibraryUpdateService.isRunning()
+                                binding.swipeRefresh.isRefreshing = LibraryUpdateJob.isRunning(view.context)
                             }
                         },
                     )
                 }
-                LibraryUpdateService.start(view.context)
+                LibraryUpdateJob.startNow(view.context)
             }
         }
         ogRadius = view.resources.getDimension(R.dimen.rounded_radius)
@@ -454,6 +486,24 @@ class RecentsController(bundle: Bundle? = null) :
             presenter.preferences.recentsViewType().get() != presenter.viewType.mainValue
     }
 
+    override fun handleOnBackStarted(backEvent: BackEventCompat) {
+        if (showingDownloads) {
+            binding.downloadBottomSheet.dlBottomSheet.sheetBehavior?.startBackProgress(backEvent)
+        }
+    }
+
+    override fun handleOnBackProgressed(backEvent: BackEventCompat) {
+        if (showingDownloads) {
+            binding.downloadBottomSheet.dlBottomSheet.sheetBehavior?.updateBackProgress(backEvent)
+        }
+    }
+
+    override fun handleOnBackCancelled() {
+        if (showingDownloads) {
+            binding.downloadBottomSheet.dlBottomSheet.sheetBehavior?.cancelBackProgress()
+        }
+    }
+
     override fun handleBack(): Boolean {
         if (showingDownloads) {
             binding.downloadBottomSheet.dlBottomSheet.dismiss()
@@ -491,7 +541,9 @@ class RecentsController(bundle: Bundle? = null) :
 
     override fun onDestroy() {
         super.onDestroy()
-        binding.downloadBottomSheet.root.onDestroy()
+        if (isBindingInitialized) {
+            binding.downloadBottomSheet.root.onDestroy()
+        }
         snack?.dismiss()
         snack = null
     }
@@ -510,9 +562,12 @@ class RecentsController(bundle: Bundle? = null) :
         shouldMoveToTop: Boolean = false,
     ) {
         if (view == null) return
+        if (!binding.progress.isVisible && recents.isNotEmpty()) {
+            (activity as? MainActivity)?.showNotificationPermissionPrompt()
+        }
         binding.progress.isVisible = false
         binding.frameLayout.alpha = 1f
-        binding.swipeRefresh.isRefreshing = LibraryUpdateService.isRunning()
+        binding.swipeRefresh.isRefreshing = LibraryUpdateJob.isRunning(view!!.context)
         adapter.removeAllScrollableHeaders()
         adapter.updateDataSet(recents)
         adapter.onLoadMoreComplete(null)
@@ -605,7 +660,7 @@ class RecentsController(bundle: Bundle? = null) :
             presenter.deleteChapter(chapter, manga)
         } else {
             if (item.status == Download.State.ERROR) {
-                DownloadService.start(view.context)
+                DownloadJob.start(view.context)
             } else {
                 presenter.downloadChapter(manga, chapter)
             }
@@ -626,7 +681,7 @@ class RecentsController(bundle: Bundle? = null) :
             presenter.deleteChapter(chapter, manga)
         } else {
             if (status == Download.State.ERROR) {
-                DownloadService.start(view.context)
+                DownloadJob.start(view.context)
             } else {
                 presenter.downloadChapter(manga, chapter)
             }
@@ -838,7 +893,7 @@ class RecentsController(bundle: Bundle? = null) :
                 tabs.removeAllTabs()
                 tabs.clearOnTabSelectedListeners()
                 val selectedTab = presenter.viewType
-                RecentsViewType.values().forEach { viewType ->
+                RecentsViewType.entries.forEach { viewType ->
                     tabs.addTab(
                         tabs.newTab().setText(viewType.stringRes).also { tab ->
                             tab.view.compatToolTipText = null
@@ -931,7 +986,7 @@ class RecentsController(bundle: Bundle? = null) :
     override fun onLoadMore(lastPosition: Int, currentPage: Int) {
         val view = view ?: return
         if (presenter.finished ||
-            BackupRestoreService.isRunning(view.context.applicationContext) ||
+            BackupRestoreJob.isRunning(view.context.applicationContext) ||
             (presenter.viewType == RecentsViewType.GroupedAll && !isSearching())
         ) {
             loadNoMore()

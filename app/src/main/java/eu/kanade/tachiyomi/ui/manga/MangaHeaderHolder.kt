@@ -308,9 +308,7 @@ class MangaHeaderHolder(
 
         setGenreTags(binding, manga)
 
-        if (manga.author == manga.artist || manga.artist.isNullOrBlank() ||
-            manga.author?.contains(manga.artist ?: "", true) == true
-        ) {
+        if (manga.hasSameAuthorAndArtist) {
             binding.mangaAuthor.text = manga.author?.trim()
         } else {
             binding.mangaAuthor.text = listOfNotNull(manga.author?.trim(), manga.artist?.trim()).joinToString(", ")
@@ -434,10 +432,9 @@ class MangaHeaderHolder(
             )
         with(binding.mangaSource) {
             val enabledLanguages = presenter.preferences.enabledLanguages().get()
-                .filterNot { it == "all" }
 
             text = buildSpannedString {
-                append(presenter.source.nameBasedOnEnabledLanguages(enabledLanguages.size > 1))
+                append(presenter.source.nameBasedOnEnabledLanguages(enabledLanguages))
                 if (presenter.source is SourceManager.StubSource &&
                     presenter.source.name != presenter.source.id.toString()
                 ) {

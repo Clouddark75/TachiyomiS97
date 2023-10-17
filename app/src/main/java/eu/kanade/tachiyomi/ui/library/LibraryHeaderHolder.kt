@@ -19,7 +19,7 @@ import com.github.florent37.viewtooltip.ViewTooltip
 import eu.davidea.flexibleadapter.SelectableAdapter
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Category
-import eu.kanade.tachiyomi.data.library.LibraryUpdateService
+import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.databinding.LibraryCategoryHeaderItemBinding
 import eu.kanade.tachiyomi.source.icon
@@ -210,7 +210,7 @@ class LibraryHeaderHolder(val view: View, val adapter: LibraryCategoryAdapter) :
                 setRefreshing(false)
                 binding.updateButton.isVisible = false
             }
-            LibraryUpdateService.categoryInQueue(category.id) -> {
+            LibraryUpdateJob.categoryInQueue(category.id) -> {
                 binding.collapseArrow.isVisible = !adapter.isSingleCategory
                 binding.checkbox.isVisible = false
                 binding.updateButton.isVisible = true
@@ -277,7 +277,7 @@ class LibraryHeaderHolder(val view: View, val adapter: LibraryCategoryAdapter) :
         val category =
             (adapter.getItem(flexibleAdapterPosition) as? LibraryHeaderItem)?.category ?: return
         adapter.controller?.activity?.let { activity ->
-            val items = LibrarySort.values().map { it.menuSheetItem(category.isDynamic) }
+            val items = LibrarySort.entries.map { it.menuSheetItem(category.isDynamic) }
             val sortingMode = category.sortingMode(true)
             val sheet = MaterialMenuSheet(
                 activity,

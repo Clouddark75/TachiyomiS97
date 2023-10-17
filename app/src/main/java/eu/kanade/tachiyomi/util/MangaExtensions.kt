@@ -22,6 +22,7 @@ import eu.kanade.tachiyomi.source.LocalSource
 import eu.kanade.tachiyomi.source.SourceManager
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.ui.category.addtolibrary.SetCategoriesSheet
+import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.manga.MangaDetailsController
 import eu.kanade.tachiyomi.ui.migration.MigrationFlags
 import eu.kanade.tachiyomi.ui.migration.manga.process.MigrationProcessAdapter
@@ -39,6 +40,7 @@ import timber.log.Timber
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.Date
+import java.util.Locale
 
 fun Manga.isLocal() = source == LocalSource.ID
 
@@ -172,6 +174,9 @@ fun Manga.addOrRemoveToFavorites(
         val categories = db.getCategories().executeAsBlocking()
         val defaultCategoryId = preferences.defaultCategory()
         val defaultCategory = categories.find { it.id == defaultCategoryId }
+        val lastUsedCategories = Category.lastCategoriesAddedTo.mapNotNull { catId ->
+            categories.find { it.id == catId }
+        }
         when {
             defaultCategory != null -> {
                 favorite = true
@@ -180,8 +185,42 @@ fun Manga.addOrRemoveToFavorites(
                 db.insertManga(this).executeAsBlocking()
                 val mc = MangaCategory.create(this, defaultCategory)
                 db.setMangaCategories(listOf(mc), listOf(this))
+                (activity as? MainActivity)?.showNotificationPermissionPrompt()
                 onMangaMoved()
                 return view.snack(activity.getString(R.string.added_to_, defaultCategory.name)) {
+                    setAction(R.string.change) {
+                        moveCategories(db, activity, onMangaMoved)
+                    }
+                }
+            }
+            defaultCategoryId == -2 && (
+                lastUsedCategories.isNotEmpty() ||
+                    Category.lastCategoriesAddedTo.firstOrNull() == 0
+                ) -> { // last used category(s)
+                favorite = true
+                date_added = Date().time
+                autoAddTrack(db, onMangaMoved)
+                db.insertManga(this).executeAsBlocking()
+                db.setMangaCategories(
+                    lastUsedCategories.map { MangaCategory.create(this, it) },
+                    listOf(this),
+                )
+                (activity as? MainActivity)?.showNotificationPermissionPrompt()
+                onMangaMoved()
+                return view.snack(
+                    activity.getString(
+                        R.string.added_to_,
+                        when (lastUsedCategories.size) {
+                            0 -> activity.getString(R.string.default_category).lowercase(Locale.ROOT)
+                            1 -> lastUsedCategories.firstOrNull()?.name ?: ""
+                            else -> activity.resources.getQuantityString(
+                                R.plurals.category_plural,
+                                lastUsedCategories.size,
+                                lastUsedCategories.size,
+                            )
+                        },
+                    ),
+                ) {
                     setAction(R.string.change) {
                         moveCategories(db, activity, onMangaMoved)
                     }
@@ -194,6 +233,7 @@ fun Manga.addOrRemoveToFavorites(
                 db.insertManga(this).executeAsBlocking()
                 db.setMangaCategories(emptyList(), listOf(this))
                 onMangaMoved()
+                (activity as? MainActivity)?.showNotificationPermissionPrompt()
                 return if (categories.isNotEmpty()) {
                     view.snack(activity.getString(R.string.added_to_, activity.getString(R.string.default_value))) {
                         setAction(R.string.change) {
@@ -204,20 +244,8 @@ fun Manga.addOrRemoveToFavorites(
                     view.snack(R.string.added_to_library)
                 }
             }
-            else -> {
-                val categoriesForManga = db.getCategoriesForManga(this).executeAsBlocking()
-                val ids = categoriesForManga.mapNotNull { it.id }.toTypedArray()
-
-                SetCategoriesSheet(
-                    activity,
-                    this,
-                    categories.toMutableList(),
-                    ids,
-                    true,
-                ) {
-                    onMangaAdded(null)
-                    autoAddTrack(db, onMangaMoved)
-                }.show()
+            else -> { // Always ask
+                showSetCategoriesSheet(db, activity, categories, onMangaAdded, onMangaMoved)
             }
         }
     } else {
@@ -246,6 +274,29 @@ fun Manga.addOrRemoveToFavorites(
         }
     }
     return null
+}
+
+private fun Manga.showSetCategoriesSheet(
+    db: DatabaseHelper,
+    activity: Activity,
+    categories: List<Category>,
+    onMangaAdded: (Pair<Long, Boolean>?) -> Unit,
+    onMangaMoved: () -> Unit,
+) {
+    val categoriesForManga = db.getCategoriesForManga(this).executeAsBlocking()
+    val ids = categoriesForManga.mapNotNull { it.id }.toTypedArray()
+
+    SetCategoriesSheet(
+        activity,
+        this,
+        categories.toMutableList(),
+        ids,
+        true,
+    ) {
+        (activity as? MainActivity)?.showNotificationPermissionPrompt()
+        onMangaAdded(null)
+        autoAddTrack(db, onMangaMoved)
+    }.show()
 }
 
 private fun showAddDuplicateDialog(

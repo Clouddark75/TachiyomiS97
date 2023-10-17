@@ -1,6 +1,9 @@
 package eu.kanade.tachiyomi.ui.setting
 
+import android.hardware.display.DisplayManager
 import android.os.Build
+import android.view.Display
+import androidx.core.content.getSystemService
 import androidx.preference.PreferenceScreen
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.preference.PreferenceValues
@@ -28,9 +31,9 @@ class SettingsReaderController : SettingsController() {
             intListPreference(activity) {
                 key = Keys.defaultReadingMode
                 titleRes = R.string.default_reading_mode
-                entriesRes = ReadingModeType.values().drop(1)
+                entriesRes = ReadingModeType.entries.drop(1)
                     .map { value -> value.stringRes }.toTypedArray()
-                entryValues = ReadingModeType.values().drop(1)
+                entryValues = ReadingModeType.entries.drop(1)
                     .map { value -> value.flagValue }
                 defaultValue = 2
             }
@@ -72,8 +75,8 @@ class SettingsReaderController : SettingsController() {
             multiSelectListPreferenceMat(activity) {
                 key = Keys.readerBottomButtons
                 titleRes = R.string.display_buttons_bottom_reader
-                val enumConstants = ReaderBottomButton.values()
-                entriesRes = ReaderBottomButton.values().map { it.stringRes }.toTypedArray()
+                val enumConstants = ReaderBottomButton.entries
+                entriesRes = ReaderBottomButton.entries.map { it.stringRes }.toTypedArray()
                 entryValues = enumConstants.map { it.value }
                 allSelectionRes = R.string.display_options
                 allIsAlwaysSelected = true
@@ -93,7 +96,7 @@ class SettingsReaderController : SettingsController() {
             intListPreference(activity) {
                 key = Keys.defaultOrientationType
                 titleRes = R.string.default_orientation
-                val enumConstants = OrientationType.values().drop(1)
+                val enumConstants = OrientationType.entries.drop(1)
                 entriesRes = enumConstants.map { it.stringRes }.toTypedArray()
                 entryValues = enumConstants.map { value -> value.flagValue }
                 defaultValue = OrientationType.FREE.flagValue
@@ -101,7 +104,7 @@ class SettingsReaderController : SettingsController() {
             intListPreference(activity) {
                 key = Keys.readerTheme
                 titleRes = R.string.background_color
-                val enumConstants = ReaderBackgroundColor.values()
+                val enumConstants = ReaderBackgroundColor.entries
                 entriesRes = enumConstants.map { it.longStringRes ?: it.stringRes }.toTypedArray()
                 entryValues = enumConstants.map { it.prefValue }
                 defaultValue = ReaderBackgroundColor.SMART_PAGE.prefValue
@@ -120,6 +123,22 @@ class SettingsReaderController : SettingsController() {
                 key = Keys.showPageNumber
                 titleRes = R.string.show_page_number
                 defaultValue = true
+            }
+            intListPreference(activity) {
+                bindTo(preferences.landscapeCutoutBehavior())
+                title = "${context.getString(R.string.cutout_area_behavior)} (${context.getString(R.string.landscape)})"
+                entriesRes = arrayOf(
+                    R.string.pad_cutout_areas,
+                    R.string.ignore_cutout_areas,
+                )
+                entryRange = 0..1
+                defaultValue = 0
+                isVisible = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    activity?.getSystemService<DisplayManager>()
+                        ?.getDisplay(Display.DEFAULT_DISPLAY)?.cutout != null
+                } else {
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+                }
             }
         }
 
@@ -252,7 +271,7 @@ class SettingsReaderController : SettingsController() {
                 key = Keys.pageLayout
                 title = context.getString(R.string.page_layout).addBetaTag(context)
                 dialogTitleRes = R.string.page_layout
-                val enumConstants = PageLayout.values()
+                val enumConstants = PageLayout.entries
                 entriesRes = enumConstants.map { it.fullStringRes }.toTypedArray()
                 entryValues = enumConstants.map { it.value }
                 defaultValue = PageLayout.AUTOMATIC.value
@@ -304,7 +323,7 @@ class SettingsReaderController : SettingsController() {
             listPreference(activity) {
                 bindTo(preferences.webtoonReaderHideThreshold())
                 titleRes = R.string.pref_hide_threshold
-                val enumValues = PreferenceValues.ReaderHideThreshold.values()
+                val enumValues = PreferenceValues.ReaderHideThreshold.entries
                 entriesRes = enumValues.map { it.titleResId }.toTypedArray()
                 entryValues = enumValues.map { it.name }
             }

@@ -52,7 +52,7 @@ import eu.kanade.tachiyomi.data.database.DatabaseHelper
 import eu.kanade.tachiyomi.data.database.models.Category
 import eu.kanade.tachiyomi.data.database.models.Chapter
 import eu.kanade.tachiyomi.data.database.models.Manga
-import eu.kanade.tachiyomi.data.download.DownloadService
+import eu.kanade.tachiyomi.data.download.DownloadJob
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.data.image.coil.getBestColor
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
@@ -106,6 +106,7 @@ import eu.kanade.tachiyomi.util.system.launchUI
 import eu.kanade.tachiyomi.util.system.materialAlertDialog
 import eu.kanade.tachiyomi.util.system.rootWindowInsetsCompat
 import eu.kanade.tachiyomi.util.system.setCustomTitleAndMessage
+import eu.kanade.tachiyomi.util.system.timeSpanFromNow
 import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.util.view.activityBinding
 import eu.kanade.tachiyomi.util.view.findChild
@@ -871,7 +872,7 @@ class MangaDetailsController :
         val adapter = adapter ?: return
         val item = (adapter.getItem(position) as? ChapterItem) ?: return
         val descending = presenter.sortDescending()
-        var items = mutableListOf(
+        val items = mutableListOf(
             MaterialMenuSheet.MenuSheetItem(
                 0,
                 if (descending) R.drawable.ic_eye_down_24dp else R.drawable.ic_eye_up_24dp,
@@ -903,16 +904,20 @@ class MangaDetailsController :
                 ),
             )
         }
-        val menuSheet = MaterialMenuSheet(activity!!, items, item.name) { _, itemPos ->
-            when (itemPos) {
-                0 -> markPreviousAs(item, true)
-                1 -> markPreviousAs(item, false)
-                2 -> startReadRange(position, RangeMode.Read)
-                3 -> startReadRange(position, RangeMode.Unread)
-                4 -> openChapterInWebView(item)
-            }
-            true
+        val lastRead = presenter.allHistory.find { it.chapter_id == item.id }?.let {
+            activity?.timeSpanFromNow(R.string.read_, it.last_read) + "\n"
         }
+        val menuSheet =
+            MaterialMenuSheet(activity!!, items, item.name, subtitle = lastRead) { _, itemPos ->
+                when (itemPos) {
+                    0 -> markPreviousAs(item, true)
+                    1 -> markPreviousAs(item, false)
+                    2 -> startReadRange(position, RangeMode.Read)
+                    3 -> startReadRange(position, RangeMode.Unread)
+                    4 -> openChapterInWebView(item)
+                }
+                true
+            }
         menuSheet.show()
     }
 
@@ -1455,7 +1460,7 @@ class MangaDetailsController :
             presenter.deleteChapter(chapter)
         } else {
             if (chapter.status == Download.State.ERROR) {
-                DownloadService.start(view.context)
+                DownloadJob.start(view.context)
             } else {
                 downloadChapters(listOf(chapter))
             }
@@ -1501,7 +1506,11 @@ class MangaDetailsController :
     override fun showFloatingActionMode(view: TextView, content: String?, isTag: Boolean) {
         finishFloatingActionMode()
         val previousController = previousController
-        if (!isTag && previousController !is LibraryController && previousController !is RecentsController) {
+        val hasDifferentAuthors = view.id == R.id.manga_author &&
+            manga?.hasSameAuthorAndArtist == false && manga?.author != null
+        val isInSource = !isTag && previousController !is LibraryController &&
+            previousController !is RecentsController
+        if (!hasDifferentAuthors && isInSource) {
             globalSearch(content ?: view.text.toString())
             return
         }
@@ -1513,6 +1522,13 @@ class MangaDetailsController :
             )
         } else {
             FloatingMangaDetailsActionModeCallback(view, isTag = isTag)
+        }
+        if (hasDifferentAuthors) {
+            actionModeCallback.authorText = manga?.author
+            actionModeCallback.artistText = manga?.artist
+            if (isInSource) {
+                actionModeCallback.isGlobalSearch = true
+            }
         }
         if (view is Chip) {
             view.isActivated = true
@@ -1828,7 +1844,10 @@ class MangaDetailsController :
             customText = text
         }
 
-        var customText: String? = null
+        private var customText: String? = null
+        var authorText: String? = null
+        var artistText: String? = null
+        var isGlobalSearch: Boolean? = null
         val text: String
             get() {
                 return customText ?: if (textView?.isTextSelectable == true) {
@@ -1852,6 +1871,14 @@ class MangaDetailsController :
             val library = context.getString(R.string.library).lowercase(Locale.getDefault())
             localItem.title = context.getString(R.string.search_, library)
             sourceMenuItem?.title = context.getString(R.string.search_, presenter.source.name)
+            menu.findItem(R.id.action_search_author)?.title = context.getString(
+                R.string.search_,
+                context.getString(R.string.author).lowercase(Locale.getDefault()),
+            )
+            menu.findItem(R.id.action_search_artist)?.title = context.getString(
+                R.string.search_,
+                context.getString(R.string.artist).lowercase(Locale.getDefault()),
+            )
             if (isTag) {
                 if (previousController is BrowseSourceController) {
                     menu.removeItem(R.id.action_source_search)
@@ -1873,9 +1900,34 @@ class MangaDetailsController :
         ): Boolean {
             when (item?.itemId) {
                 R.id.action_copy -> copyToClipboard(text, null)
-                R.id.action_global_search -> globalSearch(text)
                 R.id.action_source_search -> sourceSearch(text)
-                R.id.action_local_search -> localSearch(text, isTag)
+                R.id.action_global_search, R.id.action_local_search -> {
+                    if (authorText != null) {
+                        mode?.menu?.findItem(R.id.action_copy)?.isVisible = false
+                        mode?.menu?.findItem(R.id.action_local_search)?.isVisible = false
+                        mode?.menu?.findItem(R.id.action_source_search)?.isVisible = false
+                        mode?.menu?.findItem(R.id.action_global_search)?.isVisible = false
+                        mode?.menu?.findItem(R.id.action_search_author)?.isVisible = true
+                        mode?.menu?.findItem(R.id.action_search_artist)?.isVisible = true
+                        isGlobalSearch = item.itemId == R.id.action_global_search
+                        mode?.invalidate()
+                        return true
+                    } else if (item.itemId == R.id.action_global_search) {
+                        globalSearch(text)
+                    } else {
+                        localSearch(text, isTag)
+                    }
+                }
+                R.id.action_search_artist, R.id.action_search_author -> {
+                    val subText =
+                        (if (item.itemId == R.id.action_search_author) authorText else artistText)
+                            ?: return false
+                    if (isGlobalSearch == true) {
+                        globalSearch(subText)
+                    } else {
+                        localSearch(subText, isTag)
+                    }
+                }
                 else -> return false
             }
             if (closeMode) {

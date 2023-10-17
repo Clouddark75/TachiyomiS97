@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.reader
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.ActivityOptions
 import android.app.assist.AssistContent
 import android.content.ClipData
 import android.content.Context
@@ -38,7 +39,6 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.addCallback
 import androidx.activity.viewModels
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.text.buildSpannedString
@@ -55,6 +55,7 @@ import androidx.core.view.children
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.core.view.updatePaddingRelative
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -260,7 +261,7 @@ class ReaderActivity : BaseActivity<ReaderActivityBinding>() {
             MainActivity.chapterIdToExitTo = 0L
             val intent = newIntent(activity, manga, chapter)
             intent.putExtra(TRANSITION_NAME, sharedElement.transitionName)
-            val activityOptions = ActivityOptionsCompat.makeSceneTransitionAnimation(
+            val activityOptions = ActivityOptions.makeSceneTransitionAnimation(
                 activity,
                 sharedElement,
                 sharedElement.transitionName,
@@ -295,7 +296,7 @@ class ReaderActivity : BaseActivity<ReaderActivityBinding>() {
         val a = obtainStyledAttributes(intArrayOf(android.R.attr.windowLightStatusBar))
         val lightStatusBar = a.getBoolean(0, false)
         a.recycle()
-        setNotchCutoutMode()
+        setCutoutMode()
 
         wic.isAppearanceLightStatusBars = lightStatusBar
         wic.isAppearanceLightNavigationBars = lightStatusBar
@@ -781,7 +782,7 @@ class ReaderActivity : BaseActivity<ReaderActivityBinding>() {
 
                 setOnClickListener {
                     popupMenu(
-                        items = OrientationType.values().map { it.flagValue to it.stringRes },
+                        items = OrientationType.entries.map { it.flagValue to it.stringRes },
                         selectedItemId = viewModel.manga?.orientationType
                             ?: preferences.defaultOrientationType().get(),
                     ) {
@@ -809,7 +810,7 @@ class ReaderActivity : BaseActivity<ReaderActivityBinding>() {
 
             readingMode.setOnClickListener { readingMode ->
                 readingMode.popupMenu(
-                    items = ReadingModeType.values().map { it.flagValue to it.stringRes },
+                    items = ReadingModeType.entries.map { it.flagValue to it.stringRes },
                     selectedItemId = viewModel.manga?.readingModeType,
                 ) {
                     viewModel.setMangaReadingMode(itemId)
@@ -924,6 +925,9 @@ class ReaderActivity : BaseActivity<ReaderActivityBinding>() {
         binding.readerLayout.doOnApplyWindowInsetsCompat { _, insets, _ ->
             setNavColor(insets)
             val systemInsets = insets.ignoredSystemInsets
+            val currentOrientation = resources.configuration.orientation
+            val isLandscapeFully = currentOrientation == Configuration.ORIENTATION_LANDSCAPE && preferences.landscapeCutoutBehavior().get() == 1
+            val cutOutInsets = if (isLandscapeFully) insets.displayCutout else null
             val vis = insets.isVisible(statusBars())
             val fullscreen = preferences.fullscreen().get() && !isSplitScreen
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -933,7 +937,7 @@ class ReaderActivity : BaseActivity<ReaderActivityBinding>() {
                 firstPass = false
                 lastVis = vis
             }
-            wic.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_BARS_BY_SWIPE
+            wic.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
             if (!fullscreen && sheetManageNavColor) {
                 window.navigationBarColor = getResourceColor(R.attr.colorSurface)
             }
@@ -949,9 +953,21 @@ class ReaderActivity : BaseActivity<ReaderActivityBinding>() {
                 rightMargin = systemInsets.right
                 height = 280.dpToPx + systemInsets.bottom
             }
+            binding.toolbar.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                leftMargin = cutOutInsets?.safeInsetLeft ?: 0
+                rightMargin = cutOutInsets?.safeInsetRight ?: 0
+            }
+            binding.chaptersSheet.topbarLayout.updatePadding(
+                left = cutOutInsets?.safeInsetLeft ?: 0,
+                right = cutOutInsets?.safeInsetRight ?: 0,
+            )
+            binding.chaptersSheet.chapterRecycler.updatePadding(
+                left = cutOutInsets?.safeInsetLeft ?: 0,
+                right = cutOutInsets?.safeInsetRight ?: 0,
+            )
             binding.navLayout.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                leftMargin = 12.dpToPx + systemInsets.left
-                rightMargin = 12.dpToPx + systemInsets.right
+                leftMargin = 12.dpToPx + max(systemInsets.left, cutOutInsets?.safeInsetLeft ?: 0)
+                rightMargin = 12.dpToPx + max(systemInsets.right, cutOutInsets?.safeInsetRight ?: 0)
             }
             binding.chaptersSheet.root.sheetBehavior?.peekHeight =
                 peek + if (fullscreen) {
@@ -1132,7 +1148,7 @@ class ReaderActivity : BaseActivity<ReaderActivityBinding>() {
         } else {
             if (preferences.fullscreen().get()) {
                 wic.hide(systemBars())
-                wic.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_BARS_BY_SWIPE
+                wic.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
             }
 
             if (animate && binding.appBar.isVisible) {
@@ -1779,14 +1795,18 @@ class ReaderActivity : BaseActivity<ReaderActivityBinding>() {
     /**
      * Sets notch cutout mode to "NEVER", if mobile is in a landscape view
      */
-    private fun setNotchCutoutMode() {
+    private fun setCutoutMode() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val currentOrientation = resources.configuration.orientation
 
             val params = window.attributes
             if (currentOrientation == Configuration.ORIENTATION_LANDSCAPE) {
                 params.layoutInDisplayCutoutMode =
-                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER
+                    if (preferences.landscapeCutoutBehavior().get() == 0) {
+                        WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER
+                    } else {
+                        WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                    }
             } else {
                 params.layoutInDisplayCutoutMode =
                     WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
@@ -1867,6 +1887,11 @@ class ReaderActivity : BaseActivity<ReaderActivityBinding>() {
 
             preferences.showPageNumber().asImmediateFlowIn(scope) { setPageNumberVisibility(it) }
 
+            preferences.landscapeCutoutBehavior().asFlow()
+                .drop(1)
+                .onEach { setCutoutMode() }
+                .launchIn(scope)
+
             preferences.trueColor().asImmediateFlowIn(scope) { setTrueColor(it) }
 
             preferences.fullscreen().asImmediateFlowIn(scope) { setFullscreen(it) }
@@ -1929,7 +1954,7 @@ class ReaderActivity : BaseActivity<ReaderActivityBinding>() {
          */
         private fun setFullscreen(enabled: Boolean) {
             WindowCompat.setDecorFitsSystemWindows(window, !enabled || isSplitScreen)
-            wic.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_BARS_BY_SWIPE
+            wic.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
             binding.root.rootWindowInsetsCompat?.let { setNavColor(it) }
         }
 

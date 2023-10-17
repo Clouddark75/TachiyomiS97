@@ -16,6 +16,7 @@ import eu.kanade.tachiyomi.data.preference.asImmediateFlowIn
 import eu.kanade.tachiyomi.ui.category.CategoryController
 import eu.kanade.tachiyomi.ui.library.LibraryPresenter
 import eu.kanade.tachiyomi.ui.library.display.TabbedLibraryDisplaySheet
+import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.util.system.launchIO
 import eu.kanade.tachiyomi.util.system.launchUI
 import eu.kanade.tachiyomi.util.view.withFadeTransaction
@@ -87,17 +88,22 @@ class SettingsLibraryController : SettingsController() {
 
                 val categories = listOf(Category.createDefault(context)) + dbCategories
                 entries =
-                    listOf(context.getString(R.string.always_ask)) + categories.map { it.name }.toTypedArray()
-                entryValues = listOf(-1) + categories.mapNotNull { it.id }.toList()
-                defaultValue = "-1"
+                    listOf(context.getString(R.string.last_used), context.getString(R.string.always_ask)) +
+                        categories.map { it.name }.toTypedArray()
+                entryValues = listOf(-2, -1) + categories.mapNotNull { it.id }.toList()
+                defaultValue = "-2"
 
-                val selectedCategory = categories.find { it.id == preferences.defaultCategory() }
-                summary =
-                    selectedCategory?.name ?: context.getString(R.string.always_ask)
+                val categoryName: (Int) -> String = { catId ->
+                    when (catId) {
+                        -2 -> context.getString(R.string.last_used)
+                        -1 -> context.getString(R.string.always_ask)
+                        else -> categories.find { it.id == preferences.defaultCategory() }?.name
+                            ?: context.getString(R.string.last_used)
+                    }
+                }
+                summary = categoryName(preferences.defaultCategory())
                 onChange { newValue ->
-                    summary = categories.find {
-                        it.id == newValue as Int
-                    }?.name ?: context.getString(R.string.always_ask)
+                    summary = categoryName(newValue as Int)
                     true
                 }
             }
@@ -125,6 +131,7 @@ class SettingsLibraryController : SettingsController() {
 
                     val interval = newValue as Int
                     if (interval > 0) {
+                        (activity as? MainActivity)?.showNotificationPermissionPrompt(true)
                         LibraryUpdateJob.setupTask(context, interval)
                     }
                     true

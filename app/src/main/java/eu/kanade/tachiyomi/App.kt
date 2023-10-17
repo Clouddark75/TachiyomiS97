@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Application
 import android.app.PendingIntent
@@ -7,10 +8,13 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.os.Build
 import android.webkit.WebView
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
@@ -35,9 +39,7 @@ import kotlinx.coroutines.flow.onEach
 import org.conscrypt.Conscrypt
 import timber.log.Timber
 import uy.kohesive.injekt.Injekt
-import uy.kohesive.injekt.api.InjektScope
 import uy.kohesive.injekt.injectLazy
-import uy.kohesive.injekt.registry.default.DefaultRegistrar
 import java.security.Security
 
 open class App : Application(), DefaultLifecycleObserver {
@@ -62,7 +64,6 @@ open class App : Application(), DefaultLifecycleObserver {
             if (packageName != process) WebView.setDataDirectorySuffix(process)
         }
 
-        Injekt = InjektScope(DefaultRegistrar())
         Injekt.importModule(AppModule(this))
 
         CoilSetup(this)
@@ -100,6 +101,13 @@ open class App : Application(), DefaultLifecycleObserver {
                             PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE,
                         )
                         setContentIntent(pendingIntent)
+                    }
+                    if (ActivityCompat.checkSelfPermission(
+                            this,
+                            Manifest.permission.POST_NOTIFICATIONS,
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        return@onEach
                     }
                     notificationManager.notify(Notifications.ID_INCOGNITO_MODE, notification)
                 } else {
@@ -141,7 +149,12 @@ open class App : Application(), DefaultLifecycleObserver {
 
         fun register() {
             if (!registered) {
-                registerReceiver(this, IntentFilter(ACTION_DISABLE_INCOGNITO_MODE))
+                ContextCompat.registerReceiver(
+                    this@App,
+                    this,
+                    IntentFilter(ACTION_DISABLE_INCOGNITO_MODE),
+                    ContextCompat.RECEIVER_EXPORTED,
+                )
                 registered = true
             }
         }

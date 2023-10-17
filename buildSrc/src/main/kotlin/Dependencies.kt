@@ -1,13 +1,13 @@
 import java.util.Locale
 
 object AndroidVersions {
-    const val compileSdk = 33
+    const val compileSdk = 34
     const val minSdk = 23
-    const val targetSdk = 30
-    const val versionCode = 104
-    const val versionName = "1.6.6"
+    const val targetSdk = 34
+    const val versionCode = 106
+    const val versionName = "1.7.1"
     const val ndk = "23.1.7779620"
-    const val kotlin = "1.8.10"
+    const val kotlin = "1.9.10"
 }
 
 object Plugins {

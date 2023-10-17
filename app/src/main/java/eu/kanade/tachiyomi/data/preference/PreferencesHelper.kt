@@ -12,7 +12,7 @@ import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Manga
 import eu.kanade.tachiyomi.data.track.TrackService
-import eu.kanade.tachiyomi.data.updater.AutoAppUpdaterJob
+import eu.kanade.tachiyomi.data.updater.AppDownloadInstallJob
 import eu.kanade.tachiyomi.extension.model.InstalledExtensionsOrder
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.ui.library.LibraryItem
@@ -96,6 +96,8 @@ class PreferencesHelper(val context: Context) {
     fun startingTab() = flowPrefs.getInt(Keys.startingTab, 0)
     fun backReturnsToStart() = flowPrefs.getBoolean(Keys.backToStart, true)
 
+    fun hasShownNotifPermission() = flowPrefs.getBoolean("has_shown_notification_permission", false)
+
     fun hasDeniedA11FilePermission() = flowPrefs.getBoolean(Keys.deniedA11FilePermission, false)
 
     fun clear() = prefs.edit().clear().apply()
@@ -111,6 +113,8 @@ class PreferencesHelper(val context: Context) {
     fun pageTransitions() = flowPrefs.getBoolean(Keys.enableTransitions, true)
 
     fun pagerCutoutBehavior() = flowPrefs.getInt(Keys.pagerCutoutBehavior, 0)
+
+    fun landscapeCutoutBehavior() = flowPrefs.getInt("landscape_cutout_behavior", 0)
 
     fun doubleTapAnimSpeed() = flowPrefs.getInt(Keys.doubleTapAnimationSpeed, 500)
 
@@ -213,7 +217,10 @@ class PreferencesHelper(val context: Context) {
 
     fun browseAsList() = flowPrefs.getBoolean(Keys.catalogueAsList, false)
 
-    fun enabledLanguages() = flowPrefs.getStringSet(Keys.enabledLanguages, setOf("all", "en", Locale.getDefault().language))
+    fun enabledLanguages() = flowPrefs.getStringSet(
+        Keys.enabledLanguages,
+        setOfNotNull("all", "en", Locale.getDefault().language.takeIf { !it.startsWith("en") }),
+    )
 
     fun sourceSorting() = flowPrefs.getInt(Keys.sourcesSort, 0)
 
@@ -257,7 +264,7 @@ class PreferencesHelper(val context: Context) {
 
     fun backupInterval() = flowPrefs.getInt(Keys.backupInterval, 0)
 
-    fun removeAfterReadSlots() = prefs.getInt(Keys.removeAfterReadSlots, -1)
+    fun removeAfterReadSlots() = flowPrefs.getInt(Keys.removeAfterReadSlots, -1)
 
     fun removeAfterMarkedAsRead() = prefs.getBoolean(Keys.removeAfterMarkedAsRead, false)
 
@@ -329,7 +336,7 @@ class PreferencesHelper(val context: Context) {
 
     fun autoDownloadWhileReading() = flowPrefs.getInt("auto_download_while_reading", 0)
 
-    fun defaultCategory() = prefs.getInt(Keys.defaultCategory, -1)
+    fun defaultCategory() = prefs.getInt(Keys.defaultCategory, -2)
 
     fun skipRead() = prefs.getBoolean(Keys.skipRead, false)
 
@@ -404,6 +411,8 @@ class PreferencesHelper(val context: Context) {
 
     fun removeBookmarkedChapters() = flowPrefs.getBoolean("pref_remove_bookmarked", false)
 
+    fun removeExcludeCategories() = flowPrefs.getStringSet("remove_exclude_categories", emptySet())
+
     fun showAllCategories() = flowPrefs.getBoolean("show_all_categories", true)
 
     fun showAllCategoriesWhenSearchingSingleCategory() = flowPrefs.getBoolean("show_all_categories_when_searching_single_category", false)
@@ -463,9 +472,9 @@ class PreferencesHelper(val context: Context) {
 
     fun sideNavMode() = flowPrefs.getInt(Keys.sideNavMode, 0)
 
-    fun appShouldAutoUpdate() = prefs.getInt(Keys.shouldAutoUpdate, AutoAppUpdaterJob.ONLY_ON_UNMETERED)
+    fun appShouldAutoUpdate() = prefs.getInt(Keys.shouldAutoUpdate, AppDownloadInstallJob.ONLY_ON_UNMETERED)
 
-    fun autoUpdateExtensions() = prefs.getInt(Keys.autoUpdateExtensions, AutoAppUpdaterJob.ONLY_ON_UNMETERED)
+    fun autoUpdateExtensions() = prefs.getInt(Keys.autoUpdateExtensions, AppDownloadInstallJob.ONLY_ON_UNMETERED)
 
     fun useShizukuForExtensions() = prefs.getBoolean(Keys.useShizuku, false)
 

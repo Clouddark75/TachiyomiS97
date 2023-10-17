@@ -231,9 +231,9 @@ class Downloader(
                     bySource.flatMap(
                         { download ->
                             Observable.fromCallable {
-                            runBlocking { downloadChapter(download) }
-                            download
-                        }.subscribeOn(Schedulers.io())
+                                runBlocking { downloadChapter(download) }
+                                download
+                            }.subscribeOn(Schedulers.io())
                         },
                         3,
                     )

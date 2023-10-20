@@ -24,6 +24,7 @@ import eu.kanade.tachiyomi.ui.main.SearchActivity
 import eu.kanade.tachiyomi.ui.manga.MangaDetailsController
 import eu.kanade.tachiyomi.ui.source.browse.BrowseSourceController
 import eu.kanade.tachiyomi.util.addOrRemoveToFavorites
+import eu.kanade.tachiyomi.util.system.extensionIntentForText
 import eu.kanade.tachiyomi.util.system.rootWindowInsetsCompat
 import eu.kanade.tachiyomi.util.view.activityBinding
 import eu.kanade.tachiyomi.util.view.scrollViewWith
@@ -161,6 +162,10 @@ open class GlobalSearchController(
         activityBinding?.searchToolbar?.searchView?.setQuery(presenter.query, false)
 
         setOnQueryTextChangeListener(activityBinding?.searchToolbar?.searchView, onlyOnSubmit = true, hideKbOnSubmit = true) {
+            // try to handle the query as a manga URL
+            applicationContext?.extensionIntentForText(it ?: "")?.let {
+                startActivity(it)
+            }
             presenter.search(it ?: "")
             setTitle() // Update toolbar title
             true
@@ -212,6 +217,11 @@ open class GlobalSearchController(
         if (extensionFilter != null) {
             customTitle = view.context?.getString(R.string.loading)
             setTitle()
+        }
+
+        // try to handle the query as a manga URL
+        applicationContext?.extensionIntentForText(presenter.query)?.let {
+            startActivity(it)
         }
     }
 

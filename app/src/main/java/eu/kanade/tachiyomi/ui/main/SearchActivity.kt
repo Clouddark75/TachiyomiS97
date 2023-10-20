@@ -138,7 +138,7 @@ class SearchActivity : MainActivity() {
             INTENT_SEARCH -> {
                 val query = intent.getStringExtra(INTENT_SEARCH_QUERY)
                 val filter = intent.getStringExtra(INTENT_SEARCH_FILTER)
-                if (query != null && query.isNotEmpty()) {
+                if (!query.isNullOrEmpty()) {
                     if (router.backstackSize > 1) {
                         router.popToRoot()
                     }

@@ -145,9 +145,9 @@ open class WebViewActivity : BaseWebViewActivity() {
         val translucentWhite = ColorUtils.setAlphaComponent(tintColor, 127)
         backItem.icon?.setTint(if (binding.webview.canGoBack()) tintColor else translucentWhite)
         forwardItem?.icon?.setTint(if (binding.webview.canGoForward()) tintColor else translucentWhite)
-        val extenstionCanOpenUrl = binding.webview.canGoBack() &&
+        val extensionCanOpenUrl = binding.webview.canGoBack() &&
             binding.webview.url?.let { extensionIntentForText(it) != null } ?: false
-        binding.toolbar.menu.findItem(R.id.action_open_in_app)?.isVisible = extenstionCanOpenUrl
+        binding.toolbar.menu.findItem(R.id.action_open_in_app)?.isVisible = extensionCanOpenUrl
         reEnableBackPressedCallBack()
         return super.onPrepareOptionsMenu(menu)
     }

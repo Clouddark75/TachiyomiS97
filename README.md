@@ -2,7 +2,9 @@
 |-------|----------|---------|
 | [![release](https://img.shields.io/github/v/release/saud-97/tachiyomis97.svg?maxAge=3600&label=download)](https://github.com/saud-97/TachiyomiS97/releases) | [![Translation status](https://hosted.weblate.org/widgets/tachiyomi/-/tachiyomi-j2k/svg-badge.svg)](https://hosted.weblate.org/engage/tachiyomi/?utm_source=widget) | [![Discord](https://img.shields.io/discord/349436576037732353.svg?label=discord&labelColor=7289da&color=2c2f33&style=flat)](https://discord.gg/tachiyomi) |
 # ![app icon](./.github/readme-images/app-icon.png) TachiyomiS97
-TachiyomiS97 is a modified version of [TachiyomiJ2K](https://github.com/jays2kings/tachiyomiJ2K) with my own features added. Based on the original [Tachiyomi](https://github.com/tachiyomiorg/tachiyomi).
+TachiyomiS97 is a tweaked version of [TachiyomiJ2K](https://github.com/jays2kings/tachiyomiJ2K) with my own features added. Based on the original [Tachiyomi](https://github.com/tachiyomiorg/tachiyomi).
+
+![screenshots of app](./.github/readme-images/screens.gif)
 
 ## Unique Features
 
@@ -64,7 +66,6 @@ Plus TachiyomiJ2K features such as:
     See the License for the specific language governing permissions and
     limitations under the License.
 
-
 ## Disclaimer
 
-The developer of this application does not have any affiliation with the content providers available.
+    The developer of this application does not have any affiliation with the content providers available.

@@ -119,7 +119,6 @@ open class BaseWebViewActivity : BaseActivity<WebviewActivityBinding>() {
 
         if (bundle == null) {
             binding.webview.setDefaultSettings()
-
             binding.webview.webChromeClient = object : WebChromeClient() {
                 override fun onProgressChanged(view: WebView?, newProgress: Int) {
                     binding.progressBar.isVisible = true
@@ -134,6 +133,7 @@ open class BaseWebViewActivity : BaseActivity<WebviewActivityBinding>() {
                 override fun onReceivedTitle(view: WebView?, title: String?) {
                     super.onReceivedTitle(view, title)
                     this@BaseWebViewActivity.title = title
+                    binding.toolbar.subtitle = binding.webview.url
                 }
             }
             val marginB = binding.webview.marginBottom

@@ -154,7 +154,6 @@
     <string name="history">Histórico</string>
     <string name="recent_updates">Atualizações recentes</string>
     <string name="this_will_remove_the_read_date_for_x_question">Isto removerá a data de leitura de \"%1$s\". Tem certeza\?</string>
-    <string name="this_will_remove_the_read_date_question">Isto removerá a data de leitura deste capítulo. Tem certeza\?</string>
     <string name="reset_all_chapters_for_this_">Redefinir todos os capítulos para este %1$s</string>
     <string name="last_read_">Última leitura %1$s</string>
     <string name="read_">%1$s lido</string>
@@ -352,7 +351,6 @@
     <string name="status">Estado</string>
     <string name="started">Começado</string>
     <string name="type">Tipo</string>
-    <string name="url_not_set_click_again">URL do mangá não definida, por favor clique no título e selecione o mangá novamente</string>
     <string name="refresh_tracking">Atualizar monitoramento</string>
     <string name="add_tracking">Adicionar monitoramento</string>
     <!-- Migration -->
@@ -443,8 +441,8 @@
     <string name="clear_cookies">Excluir cookies</string>
     <string name="cookies_cleared">Cookies limpos</string>
     <string name="clear_database">Limpar banco de dados</string>
-    <string name="clear_database_summary">Exclua mangás e capítulos que não estão na sua biblioteca</string>
-    <string name="clear_database_confirmation">Tem certeza\? Os capítulos lidos e o progresso em mangás que não estão salvos na sua biblioteca serão perdidos</string>
+    <string name="clear_database_summary">Exclui o histórico de itens que não estão salvos em sua biblioteca</string>
+    <string name="clear_database_confirmation">Tem certeza\? Os capítulos lidos e o progresso em itens que não estão na sua biblioteca serão perdidos</string>
     <string name="clear_database_completed">Entradas excluídas</string>
     <string name="refresh_library_metadata">Atualizar metadados da biblioteca</string>
     <string name="updates_covers_genres_desc">Atualiza capas, gêneros, descrição e informação de estado dos mangás</string>
@@ -842,8 +840,6 @@
     <string name="landscape">Paisagem</string>
     <string name="portrait">Retrato</string>
     <string name="automatic_removal">Remoção automática</string>
-    <string name="create_folders_by_manga_title">Cria pastas de acordo com o título do mangá</string>
-    <string name="save_pages_separately">Salvar páginas em pastas separadas</string>
     <string name="show_on_long_press">Mostrar no toque longo</string>
     <string name="actions">Ações</string>
     <string name="search_tips_show_periodically">Dicas de pesquisa aparecerão periodicamente. Pressione-a e segure-a para pesquisá-la.</string>
@@ -853,7 +849,7 @@
     <string name="mark_range_as_read">Marcar um intervalo de capítulos como lido</string>
     <string name="cancel_all_for_series">Cancelar todos para esta série</string>
     <string name="app_shortcuts">Atalhos do app</string>
-    <string name="external_storage_permission_notice">TachiyomiS97 requer o acesso ao armazenamento de arquivos no Android 11 para baixar capítulos, criar backups automáticos e ler mangás locais.
+    <string name="external_storage_permission_notice">TachiyomiS97 requer acesso total ao armazenamento do Android 11 para baixar capítulos, criar backups automáticos e ler mangás locais.
 \n
 \nNa próxima tela ative \"Permitir acesso de gerenciamento de todos arquivos.\"</string>
     <string name="dark_theme">Tema escuro</string>
@@ -869,7 +865,7 @@
     <string name="global_updates">Atualizações globais</string>
     <string name="open_random_series">Abrir uma série aleatória</string>
     <string name="show_number_of_items">Mostrar o número de itens</string>
-    <string name="external_storage_download_notice">TachiyomiS97 requer o acesso total aos arquivos para baixar os capítulos. Clique aqui, então habilite \"Permitir o acesso para gerenciar todos os arquivos\"</string>
+    <string name="external_storage_download_notice">TachiyomiS97 requer o acesso a todos os arquivos para baixar os capítulos. Toque aqui, então habilite \"Permitir o acesso para gerenciar todos os arquivos\"</string>
     <string name="all_files_permission_required">Permissão para acessar arquivos</string>
     <string name="restore_miui_warning">Backup/restauração pode não funcionar adequadamente se a Otimização MIUI estiver desabilitada.</string>
     <string name="set_as_default">Definir como padrão</string>
@@ -969,11 +965,9 @@
     <string name="ext_installer_shizuku_unavailable_dialog">Instale e inicie o Shizuku para utilizá-lo como o instalador de extensões.</string>
     <string name="download_queue_size_warning">Aviso: grandes downloads em massa podem levar as fontes a ficarem lentas e/ou começarem a bloquear o Tachiyomi. Toque para saber mais.</string>
     <string name="every_3_days">A cada 3 dias</string>
-    <string name="use_shizuku_summary">Permite que extensões sejam instaladas ou atualizadas automaticamente sem a necessidade de confirmação do usuário em dispositivos anteriores ao Android 12</string>
     <string name="save_chapters_as_cbz">Salvar como arquivo CBZ</string>
     <string name="classic_blue">Azul Clássico</string>
     <string name="scanlators">Scanlators</string>
-    <string name="use_shizuku_to_install">Use Shizuku para instalar extensões</string>
     <string name="lime_time">Tempo de Limão</string>
     <string name="tracking_info">Sincronização unidirecional para atualizar o progresso dos capítulos nos serviços de monitoramento. Configure o monitoramento para entradas individuais dos mangás a partir de seus botões de monitoramento.</string>
     <string name="enhanced_services">Serviços aprimorados</string>
@@ -991,7 +985,7 @@
     <string name="ascending">Crescente</string>
     <string name="date">Data</string>
     <string name="descending">Decrescente</string>
-    <string name="clear_database_source_item_count">%1$d mangás que não estão na biblioteca no banco de dados</string>
+    <string name="clear_database_source_item_count">%1$d itens que não estão na biblioteca no banco de dados</string>
     <string name="database_clean">Banco de dados limpo</string>
     <string name="confirm_manga_add_duplicate">Você tem um item na sua biblioteca com o mesmo nome, mas de uma fonte diferente (%1$s).
 \n
@@ -1095,7 +1089,7 @@
     <string name="tracker">Rastreador</string>
     <string name="clear_db_exclude_read">Mantenha mangás como capítulos lidos</string>
     <string name="statistics_details">Detalhes dos Status</string>
-    <string name="all_read_manga">Todos os mangás Lidos</string>
+    <string name="all_read_manga">Todos os mangás lidos</string>
     <string name="statistics">Estatísticas</string>
     <string name="tracked_titles">Títulos Monitorados</string>
     <string name="chapters_read">Capítulos lidos</string>
@@ -1143,4 +1137,12 @@
     <string name="open">Abrir</string>
     <string name="allow_notifications_recommended">Ativando notificações é recomendado para guardar sua biblioteca e manter o aplicativo atualizado em dia.</string>
     <string name="pref_remove_exclude_categories">Categorias ignoradas</string>
+    <string name="ext_installer_pref">Instalador</string>
+    <string name="library_entries">Itens da biblioteca</string>
+    <string name="source_settings">Configurações das fontes</string>
+    <string name="app_settings">Configurações do aplicativo</string>
+    <string name="ext_installer_summary">Permite instalar extensões sem a necessidade de confirmação do usuário e ativa atualizações automáticas para dispositivos anteriores ao Android 12</string>
+    <string name="apply">Aplicar</string>
+    <string name="pref_debug_info">Informações de depuração</string>
+    <string name="label_background_activity">Atividade em segundo plano</string>
 </resources>

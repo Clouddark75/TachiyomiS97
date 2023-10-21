@@ -113,8 +113,6 @@ object PreferenceKeys {
 
     const val downloadOnlyOverWifi = "pref_download_only_over_wifi_key"
 
-    const val folderPerManga = "create_folder_per_manga"
-
     const val showLibrarySearchSuggestions = "show_library_search_suggestions"
 
     const val librarySearchSuggestion = "library_search_suggestion"
@@ -245,10 +243,4 @@ object PreferenceKeys {
     const val hideChapterTitles = "hide_chapter_titles"
 
     const val chaptersDescAsDefault = "chapters_desc_as_default"
-
-    fun trackUsername(syncId: Int) = "pref_mangasync_username_$syncId"
-
-    fun trackPassword(syncId: Int) = "pref_mangasync_password_$syncId"
-
-    fun trackToken(syncId: Int) = "track_token_$syncId"
 }

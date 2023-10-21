@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.ui.migration.manga.process
 
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
 import android.content.pm.ActivityInfo
 import android.graphics.Color
 import android.os.Bundle
@@ -9,7 +11,10 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
+import androidx.activity.BackEventCompat
+import androidx.core.animation.doOnEnd
 import androidx.core.graphics.ColorUtils
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat
 import com.bluelinelabs.conductor.changehandler.FadeChangeHandler
@@ -26,7 +31,6 @@ import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.ui.base.controller.BaseController
 import eu.kanade.tachiyomi.ui.main.BottomNavBarInterface
 import eu.kanade.tachiyomi.ui.manga.MangaDetailsController
-import eu.kanade.tachiyomi.ui.migration.MigrationMangaDialog
 import eu.kanade.tachiyomi.ui.migration.SearchController
 import eu.kanade.tachiyomi.ui.migration.manga.design.PreMigrationController
 import eu.kanade.tachiyomi.util.chapter.syncChaptersWithSource
@@ -431,6 +435,25 @@ class MigrationListController(bundle: Bundle? = null) :
     }
 
     override fun handleBack(): Boolean {
+        view?.let { view ->
+            if (view.x != 0f || view.alpha != 1f) {
+                val animatorSet = AnimatorSet()
+                animatorSet.play(ObjectAnimator.ofFloat(view, View.ALPHA, view.alpha, 1f))
+                val tA = ObjectAnimator.ofFloat(view, View.TRANSLATION_X, view.translationX, 0f)
+                tA.addUpdateListener {
+                    activityBinding?.backShadow?.let { backShadow ->
+                        backShadow.x = view.x - backShadow.width
+                    }
+                }
+                animatorSet.duration = 150
+                animatorSet.doOnEnd {
+                    activityBinding?.backShadow?.alpha = 0.25f
+                    activityBinding?.backShadow?.isVisible = false
+                }
+                animatorSet.play(tA)
+                animatorSet.start()
+            }
+        }
         activity?.materialAlertDialog()
             ?.setTitle(R.string.stop_migrating)
             ?.setPositiveButton(R.string.stop) { _, _ ->
@@ -475,21 +498,40 @@ class MigrationListController(bundle: Bundle? = null) :
         val totalManga = adapter?.itemCount ?: 0
         val mangaSkipped = adapter?.mangasSkipped() ?: 0
         when (item.itemId) {
-            R.id.action_copy_manga -> MigrationMangaDialog(
-                this,
-                true,
-                totalManga,
-                mangaSkipped,
-            ).showDialog(router)
-            R.id.action_migrate_manga -> MigrationMangaDialog(
-                this,
-                false,
-                totalManga,
-                mangaSkipped,
-            ).showDialog(router)
+            R.id.action_copy_manga, R.id.action_migrate_manga -> {
+                showCopyMigrateDialog(
+                    R.id.action_copy_manga == item.itemId,
+                    totalManga,
+                    mangaSkipped,
+                )
+            }
             else -> return super.onOptionsItemSelected(item)
         }
         return true
+    }
+
+    private fun showCopyMigrateDialog(copy: Boolean, totalManga: Int, mangaSkipped: Int) {
+        val activity = activity ?: return
+        val confirmRes = if (copy) R.plurals.copy_manga else R.plurals.migrate_manga
+        val skipping by lazy { activity.getString(R.string.skipping_, mangaSkipped) }
+        val additionalString = if (mangaSkipped > 0) " $skipping" else ""
+        val confirmString = activity.resources.getQuantityString(
+            confirmRes,
+            totalManga,
+            totalManga,
+            additionalString,
+        )
+        activity.materialAlertDialog()
+            .setMessage(confirmString)
+            .setPositiveButton(if (copy) R.string.copy_value else R.string.migrate) { _, _ ->
+                if (copy) {
+                    copyMangas()
+                } else {
+                    migrateMangas()
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     override fun canChangeTabs(block: () -> Unit): Boolean {
@@ -504,6 +546,16 @@ class MigrationListController(bundle: Bundle? = null) :
             return false
         }
         return true
+    }
+
+    override fun handleOnBackProgressed(backEvent: BackEventCompat) {
+        super.handleOnBackProgressed(backEvent)
+        if (router.backstackSize > 1 && isControllerVisible) {
+            router.backstack[router.backstackSize - 2].controller.view?.let { view2 ->
+                view2.alpha = 0f
+                view2.x = 0f
+            }
+        }
     }
 
     companion object {

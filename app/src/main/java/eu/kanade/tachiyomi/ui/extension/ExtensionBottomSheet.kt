@@ -21,6 +21,7 @@ import eu.kanade.tachiyomi.databinding.RecyclerWithScrollerBinding
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.extension.model.InstalledExtensionsOrder
+import eu.kanade.tachiyomi.extension.util.ExtensionInstaller
 import eu.kanade.tachiyomi.ui.extension.details.ExtensionDetailsController
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.migration.BaseMigrationInterface
@@ -30,6 +31,7 @@ import eu.kanade.tachiyomi.ui.migration.SourceAdapter
 import eu.kanade.tachiyomi.ui.migration.SourceItem
 import eu.kanade.tachiyomi.ui.migration.manga.design.PreMigrationController
 import eu.kanade.tachiyomi.ui.source.BrowseController
+import eu.kanade.tachiyomi.util.system.isPackageInstalled
 import eu.kanade.tachiyomi.util.system.materialAlertDialog
 import eu.kanade.tachiyomi.util.system.rootWindowInsetsCompat
 import eu.kanade.tachiyomi.util.view.activityBinding
@@ -220,7 +222,7 @@ class ExtensionBottomSheet @JvmOverloads constructor(context: Context, attrs: At
 
     override fun onUpdateAllClicked(position: Int) {
         (controller.activity as? MainActivity)?.showNotificationPermissionPrompt()
-        if (!presenter.preferences.useShizukuForExtensions() &&
+        if (presenter.preferences.extensionInstaller().get() != ExtensionInstaller.SHIZUKU &&
             !presenter.preferences.hasPromptedBeforeUpdateAll().get()
         ) {
             controller.activity!!.materialAlertDialog()
@@ -297,7 +299,7 @@ class ExtensionBottomSheet @JvmOverloads constructor(context: Context, attrs: At
         if (binding.tabs.selectedTabPosition == 0) {
             val extension = (extAdapter?.getItem(position) as? ExtensionItem)?.extension ?: return
             if (extension is Extension.Installed || extension is Extension.Untrusted) {
-                uninstallExtension(extension.pkgName)
+                uninstallExtension(extension.name, extension.pkgName)
             }
         }
     }
@@ -408,9 +410,26 @@ class ExtensionBottomSheet @JvmOverloads constructor(context: Context, attrs: At
     override fun trustSignature(signatureHash: String) {
         presenter.trustSignature(signatureHash)
     }
-
     override fun uninstallExtension(pkgName: String) {
         presenter.uninstallExtension(pkgName)
+    }
+
+    private fun uninstallExtension(extName: String, pkgName: String) {
+        if (context.isPackageInstalled(pkgName)) {
+            presenter.uninstallExtension(pkgName)
+        } else {
+            controller.activity!!.materialAlertDialog()
+                .setTitle(extName)
+                .setPositiveButton(R.string.remove) { _, _ ->
+                    presenter.uninstallExtension(pkgName)
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
+        }
+    }
+
+    fun setCanInstallPrivately(installPrivately: Boolean) {
+        extAdapter?.installPrivately = installPrivately
     }
 
     fun onDestroy() {

@@ -17,6 +17,7 @@ import eu.kanade.tachiyomi.databinding.ExtensionCardItemBinding
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.extension.model.InstalledExtensionsOrder
+import eu.kanade.tachiyomi.extension.util.ExtensionLoader
 import eu.kanade.tachiyomi.ui.base.holder.BaseFlexibleViewHolder
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import eu.kanade.tachiyomi.util.system.getResourceColor
@@ -47,19 +48,28 @@ class ExtensionHolder(view: View, val adapter: ExtensionAdapter) :
         if (extension is Extension.Installed && !extension.hasUpdate) {
             when (InstalledExtensionsOrder.fromValue(adapter.installedSortOrder)) {
                 InstalledExtensionsOrder.RecentlyUpdated -> {
-                    extensionUpdateDate(extension.pkgName)?.let {
-                        binding.date.isVisible = true
-                        binding.date.text = itemView.context.timeSpanFromNow(R.string.updated_, it)
-                        infoText.add("")
-                    }
+                    ExtensionLoader.extensionUpdateDate(itemView.context, extension)
+                        .takeUnless { it == 0L }?.let {
+                            binding.date.isVisible = true
+                            binding.date.text = itemView.context.timeSpanFromNow(R.string.updated_, it)
+                            infoText.add("")
+                        }
                 }
                 InstalledExtensionsOrder.RecentlyInstalled -> {
-                    extensionInstallDate(extension.pkgName)?.let {
-                        binding.date.isVisible = true
-                        binding.date.text =
-                            itemView.context.timeSpanFromNow(R.string.installed_, it)
-                        infoText.add("")
-                    }
+                    ExtensionLoader.extensionInstallDate(itemView.context, extension)
+                        .takeUnless { it == 0L }?.let {
+                            binding.date.isVisible = true
+                            binding.date.text =
+                                itemView.context.timeSpanFromNow(
+                                    if (extension.isShared) {
+                                        R.string.installed_
+                                    } else {
+                                        R.string.added_
+                                    },
+                                    it,
+                                )
+                            infoText.add("")
+                        }
                 }
                 else -> binding.date.isVisible = false
             }
@@ -153,25 +163,7 @@ class ExtensionHolder(view: View, val adapter: ExtensionAdapter) :
             setText(R.string.trust)
         } else {
             resetStrokeColor()
-            setText(R.string.install)
-        }
-    }
-
-    private fun extensionInstallDate(pkgName: String): Long? {
-        val context = itemView.context
-        return try {
-            context.packageManager.getPackageInfo(pkgName, 0).firstInstallTime
-        } catch (e: java.lang.Exception) {
-            null
-        }
-    }
-
-    private fun extensionUpdateDate(pkgName: String): Long? {
-        val context = itemView.context
-        return try {
-            context.packageManager.getPackageInfo(pkgName, 0).lastUpdateTime
-        } catch (e: java.lang.Exception) {
-            null
+            setText(if (adapter.installPrivately) R.string.add else R.string.install)
         }
     }
 }

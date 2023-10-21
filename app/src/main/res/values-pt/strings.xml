@@ -106,8 +106,8 @@
     <string name="clear_cookies">Limpar cookies</string>
     <string name="cookies_cleared">Cookies limpos</string>
     <string name="clear_database">Limpar base de dados</string>
-    <string name="clear_database_summary">Eliminar mangás e capítulos não presentes na biblioteca</string>
-    <string name="clear_database_confirmation">Tem certeza\? O progresso de capítulos e mangás fora da biblioteca será perdido</string>
+    <string name="clear_database_summary">Exclui o histórico de itens que não estão salvos nasua biblioteca</string>
+    <string name="clear_database_confirmation">Tem certeza\? Os capítulos lidos e o progresso em itens que não estão na sua biblioteca serão perdidos</string>
     <string name="clear_database_completed">Eliminar entradas</string>
     <!-- About section -->
     <string name="version">Versão</string>
@@ -148,7 +148,6 @@
     <string name="title">Título</string>
     <string name="chapters">Capítulos</string>
     <!-- Dialog remove recently view -->
-    <string name="this_will_remove_the_read_date_question">Esta ação irá remover a data de leitura deste capítulo. Continuar?</string>
     <!-- Reader activity -->
     <string name="page_">Página: %1$d</string>
     <string name="next_chapter_not_found">Capítulo seguinte não encontrado</string>
@@ -273,7 +272,6 @@
     <string name="rereading">Relendo</string>
     <string name="started">Começado</string>
     <string name="type">Tipo</string>
-    <string name="url_not_set_click_again">URL da manga não definida, por favor clique no título e selecione a manga novamente</string>
     <string name="category_with_name_exists">Já existe uma categoria com este nome!</string>
     <string name="picture_saved">Imagem guardada</string>
     <string name="options">Opções</string>
@@ -415,7 +413,7 @@
     <string name="manhwa">Manhwa</string>
     <string name="tracked">Monitorizado</string>
     <string name="display_as">Visualizar como</string>
-    <string name="tap_library_to_show_filters">Clicar no icone da Libraria para mostrar filtros</string>
+    <string name="tap_library_to_show_filters">Toque no ícone da biblioteca para mostrar os filtros</string>
     <string name="uniform_covers">Capas uniformes</string>
     <string name="hide_start_reading_button">Esconder butão de iniciar leitura</string>
     <string name="comfortable_grid">Grelha confortável</string>
@@ -740,8 +738,6 @@
         <item quantity="many">%1$d páginas</item>
         <item quantity="other">%1$d páginas</item>
     </plurals>
-    <string name="create_folders_by_manga_title">Cria pastas de acordo com o título do manga</string>
-    <string name="save_pages_separately">Salvar páginas em pastas separadas</string>
     <string name="show_on_long_press">Mostrar no toque longo</string>
     <string name="actions">Ações</string>
     <string name="automatic_orientation">Automático (baseado na orientação)</string>
@@ -934,16 +930,14 @@
     <string name="log_out">Terminar sessão</string>
     <string name="log_out_from_">Terminar sessão em %1$s\?</string>
     <string name="every_3_days">A cada 3 dias</string>
-    <string name="download_queue_size_warning">Aviso: descargas grandes em massa podem levar as fontes a ficarem lentas e/ou começarem a bloquear o Tachiyomi. Toque para saber mais.</string>
+    <string name="download_queue_size_warning">Aviso: downloads grandes em massa podem levar as fontes a ficarem lentas e/ou começarem a bloquear o Tachiyomi. Toque para saber mais.</string>
     <string name="ext_installer_shizuku_stopped">O Shizuku não está em execução</string>
     <string name="ext_installer_shizuku_unavailable_dialog">Instale e inicie o Shizuku para utilizá-lo como o instalador de extensões.</string>
     <string name="help_translate">Ajude a traduzir</string>
-    <string name="use_shizuku_to_install">Use o Shizuku para instalar extensões</string>
     <string name="show_outline_around_covers">Mostrar contorno ao redor das capas</string>
     <string name="notification_size_warning">Atualizações grandes podem levar ao aumento do uso da bateria e abrandamento das fontes. Toque para aprender mais.</string>
     <string name="scanlators">Tradutores</string>
     <string name="save_chapters_as_cbz">Guardar como ficheiro CBZ</string>
-    <string name="use_shizuku_summary">Permite que extensões sejam instaladas sem avisos do usuário e ativa atualizações automáticas para dispositivos com Android 12</string>
     <string name="theme_buttons_based_on_cover">Tema dos botões com base na capa</string>
     <string name="helpful_translation_links">Links de tradução úteis</string>
     <string name="filter_groups">Filtrar grupos de tradutores</string>
@@ -968,7 +962,7 @@
     <string name="ascending">Ascendente</string>
     <string name="date">Data</string>
     <string name="descending">Descendente</string>
-    <string name="clear_database_source_item_count">%1$d mangás que não estão na biblioteca na base de dados</string>
+    <string name="clear_database_source_item_count">%1$d itens que não estão na biblioteca no banco de dados</string>
     <string name="database_clean">Base de dados limpa</string>
     <string name="select_inverse">Seleção inversa</string>
     <string name="clear_history">Eliminar histórico</string>
@@ -1122,4 +1116,9 @@
     <string name="app_updates">Atualizações do aplicativo</string>
     <string name="open">Abrir</string>
     <string name="pref_remove_exclude_categories">Categorias excluídas</string>
+    <string name="ext_installer_pref">Instalador</string>
+    <string name="library_entries">Itens da biblioteca</string>
+    <string name="allow_notifications_recommended">Permitir as notificações é recomendado para manter o aplicativo e sua biblioteca atualizados.</string>
+    <string name="pref_debug_info">Informações de depuração</string>
+    <string name="label_background_activity">Atividade em segundo plano</string>
 </resources>

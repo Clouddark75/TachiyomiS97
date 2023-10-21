@@ -11,9 +11,9 @@ import com.google.android.material.color.DynamicColors
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Manga
-import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.data.updater.AppDownloadInstallJob
 import eu.kanade.tachiyomi.extension.model.InstalledExtensionsOrder
+import eu.kanade.tachiyomi.extension.util.ExtensionInstaller
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.ui.library.LibraryItem
 import eu.kanade.tachiyomi.ui.library.filter.FilterBottomSheet
@@ -224,19 +224,6 @@ class PreferencesHelper(val context: Context) {
 
     fun sourceSorting() = flowPrefs.getInt(Keys.sourcesSort, 0)
 
-    fun trackUsername(sync: TrackService) = prefs.getString(Keys.trackUsername(sync.id), "")
-
-    fun trackPassword(sync: TrackService) = prefs.getString(Keys.trackPassword(sync.id), "")
-
-    fun setTrackCredentials(sync: TrackService, username: String, password: String) {
-        prefs.edit()
-            .putString(Keys.trackUsername(sync.id), username)
-            .putString(Keys.trackPassword(sync.id), password)
-            .apply()
-    }
-
-    fun trackToken(sync: TrackService) = flowPrefs.getString(Keys.trackToken(sync.id), "")
-
     fun anilistScoreType() = flowPrefs.getString("anilist_score_type", "POINT_10")
 
     fun backupsDirectory() = flowPrefs.getString(Keys.backupDirectory, defaultBackupDir.toString())
@@ -252,8 +239,6 @@ class PreferencesHelper(val context: Context) {
 
     fun downloadOnlyOverWifi() = prefs.getBoolean(Keys.downloadOnlyOverWifi, true)
 
-    fun folderPerManga() = prefs.getBoolean(Keys.folderPerManga, false)
-
     fun librarySearchSuggestion() = flowPrefs.getString(Keys.librarySearchSuggestion, "")
 
     fun showLibrarySearchSuggestions() = flowPrefs.getBoolean(Keys.showLibrarySearchSuggestions, false)
@@ -263,7 +248,6 @@ class PreferencesHelper(val context: Context) {
     fun numberOfBackups() = flowPrefs.getInt(Keys.numberOfBackups, 2)
 
     fun backupInterval() = flowPrefs.getInt(Keys.backupInterval, 0)
-
     fun removeAfterReadSlots() = flowPrefs.getInt(Keys.removeAfterReadSlots, -1)
 
     fun removeAfterMarkedAsRead() = prefs.getBoolean(Keys.removeAfterMarkedAsRead, false)
@@ -476,7 +460,7 @@ class PreferencesHelper(val context: Context) {
 
     fun autoUpdateExtensions() = prefs.getInt(Keys.autoUpdateExtensions, AppDownloadInstallJob.ONLY_ON_UNMETERED)
 
-    fun useShizukuForExtensions() = prefs.getBoolean(Keys.useShizuku, false)
+    fun extensionInstaller() = flowPrefs.getInt("extension_installer", ExtensionInstaller.PACKAGE_INSTALLER)
 
     fun forceBypassCloudflare() = prefs.getBoolean(Keys.forceBypassCloudflare, false)
 

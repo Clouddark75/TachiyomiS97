@@ -112,7 +112,6 @@
     <string name="library_update_restriction_summary">در چه شرایطی کتابخانه آپدیت شود</string>
     <string name="categories_to_include_in_global_update">دسته بندی هایی که در به آپدیت سراسری شامل می شوند</string>
     <string name="updates">آپدیت‌ها</string>
-    <string name="this_will_remove_the_read_date_question">با این کار تاریخ خواندن این فصل حذف می شود. مطمئنید؟</string>
     <string name="other">دیگر</string>
     <string name="global_search">جست و جو در تمام منابع…</string>
     <string name="sources">منابع</string>
@@ -462,7 +461,6 @@
     <string name="update_all">آپدیت همگی</string>
     <string name="enhanced_services">سرویس های بهینه شده</string>
     <string name="no_match_found">هیچ مورد مشابهی پیدا نشد</string>
-    <string name="create_folders_by_manga_title">ساخت پوشه بر اساس نام مانگا</string>
     <string name="tracked">دنبال شده</string>
     <string name="tracking_info">برای به روز رسانی وضعیت پیشرفت قسمت ها، در سایت های خدمات ردیابی، همگام سازی یک طرفه انجام دهید. برای ردیابی هر مانگا از تب ردیابی اقدام کنید.</string>
     <string name="select_inverse">معکوس کردن انتخاب شده</string>
@@ -579,4 +577,7 @@
     <string name="gray_background">خاکستری</string>
     <string name="app_updates">بروزرسانی برنامه</string>
     <string name="pref_remove_exclude_categories">دسته‌بندی‌های محذوف</string>
+    <string name="ext_installer_pref">نصب کننده</string>
+    <string name="library_entries">کتابخانه ورودی‌ها</string>
+    <string name="label_background_activity">فعالیت در پس زمینه</string>
 </resources>

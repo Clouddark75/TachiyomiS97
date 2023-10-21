@@ -200,9 +200,7 @@ class TrackingBottomSheet(private val controller: MangaDetailsController) :
             return
         }
 
-        if (track.tracking_url.isBlank()) {
-            activity.toast(R.string.url_not_set_click_again)
-        } else {
+        if (track.tracking_url.isNotBlank()) {
             activity.openInBrowser(track.tracking_url.toUri())
             controller.refreshTracker = position
         }
@@ -243,7 +241,7 @@ class TrackingBottomSheet(private val controller: MangaDetailsController) :
 
     override fun onTitleLongClick(position: Int) {
         val title = adapter?.getItem(position)?.track?.title ?: return
-        controller.copyToClipboard(title, R.string.title, true)
+        controller.copyContentToClipboard(title, R.string.title, true)
     }
 
     private fun startTransition(duration: Long = 100) {

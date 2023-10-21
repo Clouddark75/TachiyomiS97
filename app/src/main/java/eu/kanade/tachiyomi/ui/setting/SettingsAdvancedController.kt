@@ -1,10 +1,9 @@
 package eu.kanade.tachiyomi.ui.setting
 
 import android.annotation.SuppressLint
-import android.app.Dialog
 import android.content.Context
 import android.content.Intent
-import android.os.Bundle
+import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
 import android.webkit.WebStorage
@@ -27,7 +26,9 @@ import eu.kanade.tachiyomi.data.download.DownloadProvider
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob.Target
 import eu.kanade.tachiyomi.data.preference.PreferenceKeys
+import eu.kanade.tachiyomi.data.preference.asImmediateFlowIn
 import eu.kanade.tachiyomi.extension.ShizukuInstaller
+import eu.kanade.tachiyomi.extension.util.ExtensionInstaller
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.PREF_DOH_360
 import eu.kanade.tachiyomi.network.PREF_DOH_ADGUARD
@@ -38,8 +39,8 @@ import eu.kanade.tachiyomi.network.PREF_DOH_GOOGLE
 import eu.kanade.tachiyomi.network.PREF_DOH_QUAD101
 import eu.kanade.tachiyomi.network.PREF_DOH_QUAD9
 import eu.kanade.tachiyomi.source.SourceManager
-import eu.kanade.tachiyomi.ui.base.controller.DialogController
 import eu.kanade.tachiyomi.ui.setting.database.ClearDatabaseController
+import eu.kanade.tachiyomi.ui.setting.debug.DebugController
 import eu.kanade.tachiyomi.util.CrashLogUtil
 import eu.kanade.tachiyomi.util.system.disableItems
 import eu.kanade.tachiyomi.util.system.isPackageInstalled
@@ -107,35 +108,47 @@ class SettingsAdvancedController : SettingsController() {
             }
         }
 
-        val pm = context.getSystemService(Context.POWER_SERVICE) as? PowerManager?
-        if (pm != null) {
-            preference {
-                key = "disable_batt_opt"
-                titleRes = R.string.disable_battery_optimization
-                summaryRes = R.string.disable_if_issues_with_updating
+        preference {
+            key = "debug_info"
+            titleRes = R.string.pref_debug_info
 
-                onClick {
-                    val packageName: String = context.packageName
-                    if (!pm.isIgnoringBatteryOptimizations(packageName)) {
-                        val intent = Intent().apply {
-                            action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
-                            data = "package:$packageName".toUri()
-                        }
-                        startActivity(intent)
-                    } else {
-                        context.toast(R.string.battery_optimization_disabled)
-                    }
-                }
+            onClick {
+                router.pushController(DebugController().withFadeTransaction())
             }
         }
 
-        preference {
-            key = "pref_dont_kill_my_app"
-            title = "Don't kill my app!"
-            summaryRes = R.string.about_dont_kill_my_app
+        preferenceCategory {
+            titleRes = R.string.label_background_activity
+            val pm = context.getSystemService(Context.POWER_SERVICE) as? PowerManager?
+            if (pm != null) {
+                preference {
+                    key = "disable_batt_opt"
+                    titleRes = R.string.disable_battery_optimization
+                    summaryRes = R.string.disable_if_issues_with_updating
 
-            onClick {
-                openInBrowser("https://dontkillmyapp.com/")
+                    onClick {
+                        val packageName: String = context.packageName
+                        if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                            val intent = Intent().apply {
+                                action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+                                data = "package:$packageName".toUri()
+                            }
+                            startActivity(intent)
+                        } else {
+                            context.toast(R.string.battery_optimization_disabled)
+                        }
+                    }
+                }
+            }
+
+            preference {
+                key = "pref_dont_kill_my_app"
+                title = "Don't kill my app!"
+                summaryRes = R.string.about_dont_kill_my_app
+
+                onClick {
+                    openInBrowser("https://dontkillmyapp.com/")
+                }
             }
         }
 
@@ -215,9 +228,27 @@ class SettingsAdvancedController : SettingsController() {
                 summaryRes = R.string.delete_unused_chapters
 
                 onClick {
-                    val ctrl = CleanupDownloadsDialogController()
-                    ctrl.targetController = this@SettingsAdvancedController
-                    ctrl.showDialog(router)
+                    activity!!.materialAlertDialog()
+                        .setTitle(R.string.clean_up_downloaded_chapters)
+                        .setMultiChoiceItems(
+                            R.array.clean_up_downloads,
+                            booleanArrayOf(true, true, true),
+                        ) { dialog, position, _ ->
+                            if (position == 0) {
+                                val listView = (dialog as AlertDialog).listView
+                                listView.setItemChecked(position, true)
+                            }
+                        }
+                        .setPositiveButton(android.R.string.ok) { dialog, _ ->
+                            val listView = (dialog as AlertDialog).listView
+                            val deleteRead = listView.isItemChecked(1)
+                            val deleteNonFavorite = listView.isItemChecked(2)
+                            cleanupDownloads(deleteRead, deleteNonFavorite)
+                        }
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .show().apply {
+                            disableItems(arrayOf(activity!!.getString(R.string.clean_orphaned_downloads)))
+                        }
                 }
             }
             preference {
@@ -303,26 +334,45 @@ class SettingsAdvancedController : SettingsController() {
 
         preferenceCategory {
             titleRes = R.string.extensions
-            switchPreference {
-                key = PreferenceKeys.useShizuku
-                titleRes = R.string.use_shizuku_to_install
-                summaryRes = R.string.use_shizuku_summary
-                defaultValue = false
+
+            intListPreference(activity) {
+                bindTo(preferences.extensionInstaller())
+                titleRes = R.string.ext_installer_pref
+                entriesRes = arrayOf(
+                    R.string.default_value,
+                    R.string.ext_installer_shizuku,
+                    R.string.ext_installer_private,
+                )
+                entryValues = listOf(
+                    ExtensionInstaller.PACKAGE_INSTALLER,
+                    ExtensionInstaller.SHIZUKU,
+                    ExtensionInstaller.PRIVATE,
+                )
+
                 onChange {
-                    it as Boolean
-                    if (it && !context.isPackageInstalled(ShizukuInstaller.shizukuPkgName) && !Sui.isSui()) {
-                        context.materialAlertDialog()
-                            .setTitle(R.string.shizuku)
-                            .setMessage(R.string.ext_installer_shizuku_unavailable_dialog)
-                            .setPositiveButton(R.string.download) { _, _ ->
-                                openInBrowser(ShizukuInstaller.downloadLink)
-                            }
-                            .setNegativeButton(android.R.string.cancel, null)
-                            .show()
-                        false
-                    } else {
-                        true
+                    it as Int
+                    if (it == ExtensionInstaller.SHIZUKU) {
+                        return@onChange if (!context.isPackageInstalled(ShizukuInstaller.shizukuPkgName) && !Sui.isSui()) {
+                            context.materialAlertDialog()
+                                .setTitle(R.string.ext_installer_shizuku)
+                                .setMessage(R.string.ext_installer_shizuku_unavailable_dialog)
+                                .setPositiveButton(R.string.download) { _, _ ->
+                                    openInBrowser(ShizukuInstaller.downloadLink)
+                                }
+                                .setNegativeButton(android.R.string.cancel, null)
+                                .show()
+                            false
+                        } else {
+                            true
+                        }
                     }
+                    true
+                }
+            }
+            infoPreference(R.string.ext_installer_summary).apply {
+                preferences.extensionInstaller().asImmediateFlowIn(viewScope) {
+                    isVisible =
+                        it != ExtensionInstaller.PACKAGE_INSTALLER && Build.VERSION.SDK_INT < Build.VERSION_CODES.S
                 }
             }
         }
@@ -343,35 +393,6 @@ class SettingsAdvancedController : SettingsController() {
 
                 onClick { LibraryUpdateJob.startNow(context, target = Target.TRACKING) }
             }
-        }
-    }
-
-    class CleanupDownloadsDialogController : DialogController() {
-        override fun onCreateDialog(savedViewState: Bundle?): Dialog {
-            return activity!!.materialAlertDialog()
-                .setTitle(R.string.clean_up_downloaded_chapters)
-                .setMultiChoiceItems(
-                    R.array.clean_up_downloads,
-                    booleanArrayOf(true, true, true),
-                ) { dialog, position, _ ->
-                    if (position == 0) {
-                        val listView = (dialog as AlertDialog).listView
-                        listView.setItemChecked(position, true)
-                    }
-                }
-                .setPositiveButton(android.R.string.ok) { dialog, _ ->
-                    val listView = (dialog as AlertDialog).listView
-                    val deleteRead = listView.isItemChecked(1)
-                    val deleteNonFavorite = listView.isItemChecked(2)
-                    (targetController as? SettingsAdvancedController)?.cleanupDownloads(
-                        deleteRead,
-                        deleteNonFavorite,
-                    )
-                }
-                .setNegativeButton(android.R.string.cancel, null)
-                .create().apply {
-                    this.disableItems(arrayOf(activity!!.getString(R.string.clean_orphaned_downloads)))
-                }
         }
     }
 

@@ -21,8 +21,6 @@ import androidx.core.view.updatePaddingRelative
 import androidx.recyclerview.widget.RecyclerView
 import com.bluelinelabs.conductor.ControllerChangeHandler
 import com.bluelinelabs.conductor.ControllerChangeType
-import com.bluelinelabs.conductor.RouterTransaction
-import com.bluelinelabs.conductor.changehandler.FadeChangeHandler
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.snackbar.Snackbar
 import eu.davidea.flexibleadapter.FlexibleAdapter
@@ -31,6 +29,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.preference.PreferenceValues
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.databinding.BrowseControllerBinding
+import eu.kanade.tachiyomi.extension.util.ExtensionInstaller
 import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.LocalSource
 import eu.kanade.tachiyomi.source.Source
@@ -64,6 +63,9 @@ import eu.kanade.tachiyomi.util.view.toolbarHeight
 import eu.kanade.tachiyomi.util.view.updateGradiantBGRadius
 import eu.kanade.tachiyomi.util.view.withFadeTransaction
 import eu.kanade.tachiyomi.widget.LinearLayoutManagerAccurateOffset
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.parcelize.Parcelize
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -173,6 +175,13 @@ class BrowseController :
 
         requestFilePermissionsSafe(301, preferences)
         binding.bottomSheet.root.onCreate(this)
+
+        preferences.extensionInstaller().asFlow()
+            .drop(1)
+            .onEach {
+                binding.bottomSheet.root.setCanInstallPrivately(it == ExtensionInstaller.PRIVATE)
+            }
+            .launchIn(viewScope)
 
         binding.bottomSheet.root.sheetBehavior?.isGestureInsetBottomIgnored = true
 
@@ -344,12 +353,7 @@ class BrowseController :
             when (item.itemId) {
                 // Initialize option to open catalogue settings.
                 R.id.action_filter -> {
-                    val controller = ExtensionFilterController()
-                    router.pushController(
-                        RouterTransaction.with(controller)
-                            .popChangeHandler(SettingsSourcesFadeChangeHandler())
-                            .pushChangeHandler(FadeChangeHandler()),
-                    )
+                    router.pushController(ExtensionFilterController().withFadeTransaction())
                 }
                 R.id.action_migration_guide -> {
                     activity?.openInBrowser(HELP_URL)
@@ -483,12 +487,16 @@ class BrowseController :
     override fun handleOnBackProgressed(backEvent: BackEventCompat) {
         if (showingExtensions && !binding.bottomSheet.root.canStillGoBack()) {
             binding.bottomSheet.root.sheetBehavior?.updateBackProgress(backEvent)
+        } else {
+            super.handleOnBackProgressed(backEvent)
         }
     }
 
     override fun handleOnBackCancelled() {
         if (showingExtensions && !binding.bottomSheet.root.canStillGoBack()) {
             binding.bottomSheet.root.sheetBehavior?.cancelBackProgress()
+        } else {
+            super.handleOnBackCancelled()
         }
     }
 
@@ -520,7 +528,7 @@ class BrowseController :
             binding.bottomSheet.root.updateExtTitle()
             binding.bottomSheet.root.presenter.refreshExtensions()
             presenter.updateSources()
-            if (type.isEnter) {
+            if (type.isEnter && isControllerVisible) {
                 activityBinding?.appBar?.doOnNextLayout {
                     activityBinding?.appBar?.y = 0f
                     activityBinding?.appBar?.updateAppBarAfterY(binding.sourceRecycler)
@@ -682,12 +690,7 @@ class BrowseController :
         when (item.itemId) {
             // Initialize option to open catalogue settings.
             R.id.action_filter -> {
-                val controller = SettingsSourcesController()
-                router.pushController(
-                    RouterTransaction.with(controller)
-                        .popChangeHandler(SettingsSourcesFadeChangeHandler())
-                        .pushChangeHandler(FadeChangeHandler()),
-                )
+                router.pushController(SettingsSourcesController().withFadeTransaction())
             }
             R.id.action_migration_guide -> {
                 activity?.openInBrowser(HELP_URL)
@@ -722,12 +725,10 @@ class BrowseController :
         }
     }
 
-    class SettingsSourcesFadeChangeHandler : FadeChangeHandler()
-
     @Parcelize
     data class SmartSearchConfig(val origTitle: String, val origMangaId: Long) : Parcelable
 
     companion object {
-        const val HELP_URL = "https://tachiyomi.org/help/guides/source-migration/"
+        const val HELP_URL = "https://tachiyomi.org/docs/guides/source-migration"
     }
 }

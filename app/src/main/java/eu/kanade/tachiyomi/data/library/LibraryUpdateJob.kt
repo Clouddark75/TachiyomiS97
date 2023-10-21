@@ -153,7 +153,8 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
             preferences.libraryUpdateLastTimestamp().set(Date().time)
         }
 
-        val savedMangasList = inputData.getLongArray(KEY_MANGAS)?.asList()
+        val savedMangasList = inputData.getLongArray(KEY_MANGAS)?.asList()?.plus(extraManga)
+        extraManga = emptyList()
 
         val mangaList = (
             if (savedMangasList != null) {
@@ -645,6 +646,8 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
         private var instance: WeakReference<LibraryUpdateJob>? = null
 
+        private var extraManga = emptyList<Long>()
+
         val updateMutableFlow = MutableSharedFlow<Long?>(
             extraBufferCapacity = 10,
             onBufferOverflow = BufferOverflow.DROP_OLDEST,
@@ -726,8 +729,9 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                 if (mangaToUse != null) {
                     builder.putLongArray(
                         KEY_MANGAS,
-                        mangaToUse.mapNotNull { it.id }.toLongArray(),
+                        mangaToUse.firstOrNull()?.id?.let { longArrayOf(it) } ?: longArrayOf(),
                     )
+                    extraManga = mangaToUse.subList(1, mangaToUse.size).mapNotNull { it.id }
                 }
             }
             val inputData = builder.build()

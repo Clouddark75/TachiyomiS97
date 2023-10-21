@@ -346,7 +346,6 @@
     <string name="blue_initial">Kék</string>
     <string name="always_show_chapter_transition">Mindig mutasson fejezet áttűnést</string>
     <string name="invert_tapping">Érintési zónák fordítása</string>
-    <string name="create_folders_by_manga_title">Mappák létrehozása manga cím szerint</string>
     <string name="chapters_">%1$s. fejezetek</string>
     <string name="source_not_installed_">Forrás nincs telepítve: %1$s</string>
     <string name="tracked">Követve</string>
@@ -480,7 +479,6 @@
     <string name="tap_zones">Érintési zónák</string>
     <string name="used_">Felhasznált gyorsítótár: %1$s</string>
     <string name="no_pages_found">Nem található oldal</string>
-    <string name="this_will_remove_the_read_date_question">Ez eltávolítja a fejezet olvasási dátumát. Biztos benne\?</string>
     <string name="global_search">Globális keresés…</string>
     <string name="check_site_in_web">Nézze meg a web oldalt WebView-ban</string>
     <string name="no_description">Nincs leírás</string>
@@ -617,4 +615,8 @@
     <string name="gray_background">Szürke</string>
     <string name="skip_dupe_chapters">Duplikált fejezetek átugrása</string>
     <string name="pref_remove_exclude_categories">Tiltott kategóriák</string>
+    <string name="ext_installer_pref">Telepítő</string>
+    <string name="library_entries">Könyvtár bejegyzések</string>
+    <string name="pref_debug_info">Debug információ</string>
+    <string name="label_background_activity">Háttér aktivitás</string>
 </resources>

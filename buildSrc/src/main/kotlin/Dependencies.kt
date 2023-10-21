@@ -10,6 +10,7 @@ object AndroidVersions {
     const val kotlin = "1.9.10"
 }
 
+
 object Plugins {
     const val androidApplication = "com.android.application"
     const val googleServices = "com.google.gms.google-services"

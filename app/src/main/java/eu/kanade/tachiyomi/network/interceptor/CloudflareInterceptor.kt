@@ -42,20 +42,20 @@ class CloudflareInterceptor(private val context: Context) : WebViewInterceptor(c
                 .firstOrNull { it.name == "cf_clearance" }
 
             if (preferences.forceBypassCloudflare()) {
-                for (i in 1..10) {
+                for (i in 1..5) {
                     if (preferences.forceBypassCloudflare()) {
                         try {
                             resolveWithWebView(request, oldCookie)
                             break
                         } catch (e: CloudflareBypassException) {
+                            if (i == 5) {
+                                throw e
+                            }
                             // clearwebviewdata
                             context.applicationInfo?.dataDir?.let { File("$it/app_webview/").deleteRecursively() }
                             val msg = "Trying to force bypass cloudflare. Attempt: $i"
                             Handler(Looper.getMainLooper()).post {
-                                Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-                            }
-                            if (i == 10) {
-                                throw e
+                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                             }
                         }
                     }

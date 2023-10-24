@@ -151,7 +151,7 @@ class SettingsAdvancedController : SettingsController() {
                 }
             }
         }
-
+/*
         if (isUpdaterEnabled) {
             switchPreference {
                 titleRes = R.string.check_for_beta_releases
@@ -174,7 +174,7 @@ class SettingsAdvancedController : SettingsController() {
                 }
             }
         }
-
+*/
         preferenceCategory {
             titleRes = R.string.data_management
             preference {
@@ -328,6 +328,7 @@ class SettingsAdvancedController : SettingsController() {
             switchPreference {
                 key = PreferenceKeys.forceBypassCloudflare
                 titleRes = R.string.force_bypass_cloudflare
+                summaryRes = R.string.force_bypass_cloudflare_summary
                 defaultValue = false
             }
         }

@@ -10,12 +10,14 @@ TachiyomiS97 is a tweaked version of [TachiyomiJ2K](https://github.com/jays2king
 
 New features only in this fork include:
 * Up to 5x times faster Global Updates
-* Up to 4x times faster Chapter Downloads
-* Implemented read progress sync cross-devices via tracking
-* Silenced mass download and mass update warnings
+* Up to 3x times faster Chapter Downloads
+* Allow manga read progress to sync cross-devices via trackers [Experimental]
 * Auto download next unread chapters **while reading** instead of after reading
-* Added force bypass for cloudflare failures [Experimental - doesn't always work]
+* Added force bypass feature for cloudflare failures [Experimental - depends on source protection]
 * Added more back up intervals and increased max number of backups
+* Directly access a manga by URL via Global Search (only if the source is installed)
+* Silenced mass download and mass update warnings
+* Other minor tweaks
 
 ## Features
 

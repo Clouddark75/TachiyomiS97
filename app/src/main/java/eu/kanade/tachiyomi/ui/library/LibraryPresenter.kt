@@ -629,6 +629,7 @@ class LibraryPresenter(
                                     sortAlphabetical(i1, i2)
                                 }
                             }
+                            LibrarySort.Author -> sortAlphabetical(i1, i2, LibrarySort.Author)
                         }
                         if (!category.isAscending()) sort *= -1
                         sort
@@ -672,16 +673,31 @@ class LibraryPresenter(
     }
 
     /**
-     * Sort 2 manga by the their title (and remove articles if need be)
+     * Sort 2 manga by their title (and remove articles if need be)
      *
      * @param i1 the first manga
      * @param i2 the second manga to compare
      */
-    private fun sortAlphabetical(i1: LibraryItem, i2: LibraryItem): Int {
-        return if (removeArticles) {
-            i1.manga.title.removeArticles().compareTo(i2.manga.title.removeArticles(), true)
-        } else {
-            i1.manga.title.compareTo(i2.manga.title, true)
+    private fun sortAlphabetical(i1: LibraryItem, i2: LibraryItem, sortBy: LibrarySort? = LibrarySort.Title): Int {
+        return when (sortBy) {
+            LibrarySort.Author -> {
+                val category = i1.header.category
+                val i1 = i1.manga.author
+                val i2 = i2.manga.author
+                when {
+                    i1.isNullOrBlank() && i2.isNullOrBlank() -> 0
+                    i1.isNullOrBlank() -> if (category.isAscending()) 1 else -1
+                    i2.isNullOrBlank() -> if (category.isAscending()) -1 else 1
+                    else -> i1.compareTo(i2, true)
+                }
+            }
+            else -> {
+                if (removeArticles) {
+                    i1.manga.title.removeArticles().compareTo(i2.manga.title.removeArticles(), true)
+                } else {
+                    i1.manga.title.compareTo(i2.manga.title, true)
+                }
+            }
         }
     }
 

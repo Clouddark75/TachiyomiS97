@@ -259,6 +259,9 @@ class LibraryCategoryAdapter(val controller: LibraryController?) :
                             }
                             getFirstLetter(title)
                         }
+                        LibrarySort.Author -> {
+                            getFirstLetter(item.manga.author ?: return "")
+                        }
                     }
                 }
                 if (!isSingleCategory) {

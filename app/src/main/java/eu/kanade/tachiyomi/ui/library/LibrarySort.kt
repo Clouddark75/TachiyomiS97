@@ -47,6 +47,7 @@ enum class LibrarySort(
             LatestChapter -> "LATEST_CHAPTER"
             DateFetched -> "CHAPTER_FETCH_DATE"
             DateAdded -> "DATE_ADDED"
+            Author -> "AUTHOR"
             else -> "ALPHABETICAL"
         }
         return "$type,ASCENDING"
@@ -83,6 +84,7 @@ enum class LibrarySort(
                     "LATEST_CHAPTER" -> LatestChapter
                     "CHAPTER_FETCH_DATE" -> DateFetched
                     "DATE_ADDED" -> DateAdded
+                    "AUTHOR" -> Author
                     else -> Title
                 }
             } catch (e: Exception) {

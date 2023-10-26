@@ -51,7 +51,6 @@ import com.bluelinelabs.conductor.ControllerChangeHandler
 import com.bluelinelabs.conductor.ControllerChangeType
 import com.bluelinelabs.conductor.Router
 import com.bluelinelabs.conductor.RouterTransaction
-import com.bluelinelabs.conductor.changehandler.FadeChangeHandler
 import com.google.android.material.snackbar.Snackbar
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.backup.BackupCreatorJob
@@ -61,6 +60,7 @@ import eu.kanade.tachiyomi.ui.base.SmallToolbarInterface
 import eu.kanade.tachiyomi.ui.base.controller.BaseController
 import eu.kanade.tachiyomi.ui.base.controller.CrossFadeChangeHandler
 import eu.kanade.tachiyomi.ui.base.controller.DialogController
+import eu.kanade.tachiyomi.ui.base.controller.FadeChangeHandler
 import eu.kanade.tachiyomi.ui.base.controller.OneWayFadeChangeHandler
 import eu.kanade.tachiyomi.ui.main.FloatingSearchInterface
 import eu.kanade.tachiyomi.ui.main.MainActivity
@@ -250,6 +250,27 @@ fun <T> Controller.liftAppbarWith(
                 ) {
                     val notAtTop = recycler.canScrollVertically(-1)
                     if (notAtTop != isToolbarColored) colorToolbar(notAtTop)
+                }
+            }
+        },
+    )
+    addLifecycleListener(
+        object : Controller.LifecycleListener() {
+            override fun onChangeStart(
+                controller: Controller,
+                changeHandler: ControllerChangeHandler,
+                changeType: ControllerChangeType,
+            ) {
+                super.onChangeStart(controller, changeHandler, changeType)
+                if (changeType.isEnter) {
+                    activityBinding?.appBar?.hideBigView(
+                        true,
+                        setTitleAlpha = this@liftAppbarWith !is MangaDetailsController,
+                    )
+                    activityBinding?.appBar?.setToolbarModeBy(this@liftAppbarWith)
+                    activityBinding?.appBar?.useTabsInPreLayout = false
+                    colorToolbar(isToolbarColored)
+                    activityBinding?.appBar?.updateAppBarAfterY(recycler)
                 }
             }
         },
@@ -806,17 +827,18 @@ fun Controller.requestFilePermissionsSafe(
 }
 
 fun Controller.withFadeTransaction(): RouterTransaction {
-    val isLowRam = activity?.getSystemService<ActivityManager>()?.isLowRamDevice == true
-    val handler = {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE || isLowRam) {
-            FadeChangeHandler(isLowRam)
-        } else {
-            CrossFadeChangeHandler(false)
-        }
-    }
     return RouterTransaction.with(this)
-        .pushChangeHandler(handler())
-        .popChangeHandler(handler())
+        .pushChangeHandler(fadeTransactionHandler())
+        .popChangeHandler(fadeTransactionHandler())
+}
+
+fun Controller.fadeTransactionHandler(): ControllerChangeHandler {
+    val isLowRam = activity?.getSystemService<ActivityManager>()?.isLowRamDevice == true
+    return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE || isLowRam) {
+        FadeChangeHandler(isLowRam)
+    } else {
+        CrossFadeChangeHandler(false)
+    }
 }
 
 fun Controller.withFadeInTransaction(): RouterTransaction {

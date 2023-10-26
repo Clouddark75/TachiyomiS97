@@ -289,7 +289,7 @@ class PreferencesHelper(val context: Context) {
 
     fun showEmptyCategoriesWhileFiltering() = flowPrefs.getBoolean(Keys.showEmptyCategoriesFiltering, false)
 
-    fun librarySortingMode() = flowPrefs.getInt(Keys.librarySortingMode, 0)
+    fun librarySortingMode() = flowPrefs.getInt("library_sorting_mode", 0)
 
     fun librarySortingAscending() = flowPrefs.getBoolean("library_sorting_ascending", true)
 

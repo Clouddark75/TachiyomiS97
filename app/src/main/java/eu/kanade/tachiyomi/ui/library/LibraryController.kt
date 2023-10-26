@@ -248,8 +248,10 @@ open class LibraryController(
 
     override val mainRecycler: RecyclerView
         get() = binding.libraryGridRecycler.recycler
-    var staggeredBundle: Parcelable? = null
+    private var staggeredBundle: Parcelable? = null
     private var staggeredObserver: ViewTreeObserver.OnGlobalLayoutListener? = null
+    var isPoppingIn = false
+    var tempItems: List<LibraryItem>? = null
 
     // Dynamically injected into the search bar, controls category visibility during search
     private var showAllCategoriesView: ImageView? = null
@@ -946,7 +948,7 @@ open class LibraryController(
         LibraryUpdateJob.startNow(view.context, category)
         snack = view.snack(R.string.updating_library) {
             anchorView = anchorView()
-            view.elevation = 15f.dpToPx
+            this.view.elevation = 15f.dpToPx
             setAction(R.string.cancel) {
                 LibraryUpdateJob.stop(context)
                 viewScope.launchUI {
@@ -1031,6 +1033,7 @@ open class LibraryController(
             binding.filterBottomSheet.filterBottomSheet.isVisible = true
             if (type == ControllerChangeType.POP_ENTER) {
                 presenter.getLibrary()
+                isPoppingIn = true
             }
             DownloadJob.callListeners()
             binding.recyclerCover.isClickable = false
@@ -1049,6 +1052,18 @@ open class LibraryController(
                 binding.filterBottomSheet.filterBottomSheet.isInvisible = true
             }
             activityBinding?.searchToolbar?.setOnLongClickListener(null)
+        }
+    }
+
+    override fun onChangeEnded(
+        changeHandler: ControllerChangeHandler,
+        changeType: ControllerChangeType,
+    ) {
+        super.onChangeEnded(changeHandler, changeType)
+        if (isPoppingIn) {
+            isPoppingIn = false
+            tempItems?.let { onNextLibraryUpdate(it) }
+            tempItems = null
         }
     }
 
@@ -1084,6 +1099,10 @@ open class LibraryController(
     }
 
     open fun onNextLibraryUpdate(mangaMap: List<LibraryItem>, freshStart: Boolean = false) {
+        if (isPoppingIn) {
+            tempItems = mangaMap
+            return
+        }
         view ?: return
         destroyActionModeIfNeeded()
         if (mangaMap.isNotEmpty()) {
@@ -1318,10 +1337,10 @@ open class LibraryController(
             removeStaggeredObserver()
         }
         if (!presenter.showAllCategories) {
+            shouldScrollToTop = true
             presenter.switchSection(pos)
             activeCategory = pos
             setActiveCategory()
-            shouldScrollToTop = true
             return
         }
         val headerPosition = adapter.indexOf(pos)

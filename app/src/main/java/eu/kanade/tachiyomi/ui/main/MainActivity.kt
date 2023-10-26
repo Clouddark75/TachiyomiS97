@@ -16,16 +16,19 @@ import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
 import android.provider.Settings
 import android.view.GestureDetector
 import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.MotionEvent
+import android.view.VelocityTracker
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import android.view.WindowManager
+import android.view.animation.DecelerateInterpolator
 import androidx.activity.BackEventCompat
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -65,6 +68,7 @@ import com.getkeepsafe.taptargetview.TapTargetView
 import com.google.android.material.navigation.NavigationBarView
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
+import com.google.common.primitives.Floats.max
 import com.google.common.primitives.Ints.max
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.Migrations
@@ -176,6 +180,7 @@ open class MainActivity : BaseActivity<MainActivityBinding>() {
     var hingeGapSize = 0
         private set
 
+    val velocityTracker: VelocityTracker by lazy { VelocityTracker.obtain() }
     private val actionButtonSize: Pair<Int, Int> by lazy {
         val attrs = intArrayOf(android.R.attr.minWidth, android.R.attr.minHeight)
         val ta = obtainStyledAttributes(androidx.appcompat.R.style.Widget_AppCompat_ActionButton, attrs)
@@ -258,8 +263,31 @@ open class MainActivity : BaseActivity<MainActivityBinding>() {
 
         super.onCreate(savedInstanceState)
         backPressedCallback = object : OnBackPressedCallback(enabled = true) {
+            var startTime: Long = 0
+            var lastX: Float = 0f
+            var lastY: Float = 0f
             var controllerHandlesBackPress = false
             override fun handleOnBackPressed() {
+                if (controllerHandlesBackPress &&
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+                    lastX != 0f && lastY != 0f
+                ) {
+                    val motionEvent = MotionEvent.obtain(
+                        startTime,
+                        SystemClock.uptimeMillis(),
+                        MotionEvent.ACTION_UP,
+                        lastX,
+                        lastY,
+                        0,
+                    )
+                    velocityTracker.addMovement(motionEvent)
+                    motionEvent.recycle()
+                    velocityTracker.computeCurrentVelocity(1, 5f)
+                    backVelocity =
+                        max(0.5f, abs(velocityTracker.getAxisVelocity(MotionEvent.AXIS_X)) * 0.5f)
+                }
+                lastX = 0f
+                lastY = 0f
                 backCallback()
             }
 
@@ -280,12 +308,22 @@ open class MainActivity : BaseActivity<MainActivityBinding>() {
                     controllerHandlesBackPress = true
                 }
                 if (controllerHandlesBackPress) {
+                    startTime = SystemClock.uptimeMillis()
+                    velocityTracker.clear()
+                    val motionEvent = MotionEvent.obtain(startTime, startTime, MotionEvent.ACTION_DOWN, backEvent.touchX, backEvent.touchY, 0)
+                    velocityTracker.addMovement(motionEvent)
+                    motionEvent.recycle()
                     (controller as? BackHandlerControllerInterface)?.handleOnBackStarted(backEvent)
                 }
             }
 
             override fun handleOnBackProgressed(backEvent: BackEventCompat) {
                 if (controllerHandlesBackPress) {
+                    val motionEvent = MotionEvent.obtain(startTime, SystemClock.uptimeMillis(), MotionEvent.ACTION_MOVE, backEvent.touchX, backEvent.touchY, 0)
+                    lastX = backEvent.touchX
+                    lastY = backEvent.touchY
+                    velocityTracker.addMovement(motionEvent)
+                    motionEvent.recycle()
                     val controller = router.backstack.lastOrNull()?.controller as? BackHandlerControllerInterface
                     controller?.handleOnBackProgressed(backEvent)
                 }
@@ -544,8 +582,7 @@ open class MainActivity : BaseActivity<MainActivityBinding>() {
                     binding.appBar.isVisible = true
                     binding.appBar.alpha = 1f
                     if (binding.backShadow.isVisible && !isPush) {
-                        val alpha = binding.backShadow.alpha
-                        val bA = ObjectAnimator.ofFloat(binding.backShadow, View.ALPHA, alpha, 0f)
+                        val bA = ObjectAnimator.ofFloat(binding.backShadow, View.ALPHA, 0f)
                         from?.view?.let { view ->
                             bA.addUpdateListener {
                                 binding.backShadow.x = view.x - binding.backShadow.width
@@ -561,7 +598,8 @@ open class MainActivity : BaseActivity<MainActivityBinding>() {
                             binding.backShadow.isVisible = false
                             nav.x = 0f
                         }
-                        bA.duration = 175
+                        bA.duration = 150
+                        bA.interpolator = DecelerateInterpolator(backVelocity.takeIf { it != 0f } ?: 1f)
                         bA.start()
                     }
                     if (!isPush || router.backstackSize == 1) {
@@ -579,6 +617,7 @@ open class MainActivity : BaseActivity<MainActivityBinding>() {
                 ) {
                     to?.view?.x = 0f
                     nav.translationY = 0f
+                    backVelocity = 0f
                     showDLQueueTutorial()
                     if (!(from is DialogController || to is DialogController) && from != null) {
                         from.view?.alpha = 0f
@@ -1533,6 +1572,7 @@ open class MainActivity : BaseActivity<MainActivityBinding>() {
         const val INTENT_SEARCH_FILTER = "filter"
 
         var chapterIdToExitTo = 0L
+        var backVelocity = 0f
     }
 }
 

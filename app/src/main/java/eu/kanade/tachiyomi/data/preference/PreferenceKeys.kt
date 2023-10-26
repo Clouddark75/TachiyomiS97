@@ -141,8 +141,6 @@ object PreferenceKeys {
 
     const val showEmptyCategoriesFiltering = "show_empty_categories_filtering"
 
-    const val librarySortingMode = "library_sorting_mode"
-
     const val automaticExtUpdates = "automatic_ext_updates"
 
     const val installedExtensionsOrder = "installed_extensions_order"

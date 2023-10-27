@@ -176,8 +176,13 @@ open class WebViewActivity : BaseWebViewActivity() {
 
     private fun clearCookies() {
         val url = binding.webview.url ?: return
-        val cleared = network.cookieJar.remove(url.toHttpUrl())
-        toast("Cleared $cleared cookies for: $url")
+        try {
+            val cleared = network.cookieJar.remove(url.toHttpUrl())
+            toast("Cleared $cleared cookies for: $url")
+        } catch (e: Exception) {
+            Timber.e(e)
+            toast("$e")
+        }
     }
 
     private fun openUrlInApp() {

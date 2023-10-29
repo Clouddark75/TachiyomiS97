@@ -163,7 +163,9 @@ open class GlobalSearchController(
         activityBinding?.searchToolbar?.setQueryHint(view?.context?.getString(R.string.global_search), false)
         activityBinding?.searchToolbar?.searchItem?.expandActionView()
         activityBinding?.searchToolbar?.searchView?.setQuery(presenter.query, false)
-
+        if (presenter.query.isNullOrBlank()) {
+            activityBinding?.searchToolbar?.searchView?.requestFocus()
+        }
         setOnQueryTextChangeListener(activityBinding?.searchToolbar?.searchView, onlyOnSubmit = true, hideKbOnSubmit = true) {
             // try to handle the query as a manga URL
             applicationContext?.extensionIntentForText(it ?: "")?.let {
@@ -182,7 +184,9 @@ open class GlobalSearchController(
             val searchItem = activityBinding?.searchToolbar?.searchItem ?: return
             searchItem.expandActionView()
             searchView.setQuery(presenter.query, false)
-            searchView.clearFocus()
+            if (!presenter.query.isNullOrBlank()) {
+                searchView.clearFocus()
+            }
         }
         if (type == ControllerChangeType.POP_ENTER && lastPosition > -1) {
             val holder = binding.recycler.findViewHolderForAdapterPosition(lastPosition) as? GlobalSearchHolder

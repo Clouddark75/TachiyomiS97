@@ -106,6 +106,7 @@ import eu.kanade.tachiyomi.ui.setting.SettingsController
 import eu.kanade.tachiyomi.ui.setting.SettingsMainController
 import eu.kanade.tachiyomi.ui.source.BrowseController
 import eu.kanade.tachiyomi.ui.source.browse.BrowseSourceController
+import eu.kanade.tachiyomi.ui.source.globalsearch.GlobalSearchController
 import eu.kanade.tachiyomi.util.manga.MangaCoverMetadata
 import eu.kanade.tachiyomi.util.manga.MangaShortcutManager
 import eu.kanade.tachiyomi.util.system.contextCompatDrawable
@@ -373,7 +374,6 @@ open class MainActivity : BaseActivity<MainActivityBinding>() {
         }
         nav.getItemView(R.id.nav_recents)?.setOnLongClickListener {
             lifecycleScope.launchUI {
-                Timber.i("Long pressed on  R.id.nav_recents")
                 val lastReadChapter =
                     db.getHistoryUngrouped("", 0, true).executeOnIO().maxByOrNull { it.history.last_read }
                 lastReadChapter ?: return@launchUI
@@ -383,15 +383,16 @@ open class MainActivity : BaseActivity<MainActivityBinding>() {
                 val chapter = lastReadChapter.chapter
                 activity.apply { startActivity(ReaderActivity.newIntent(activity, manga, chapter)) }
             }
+            if (nav.selectedItemId != R.id.nav_recents) {
+                nav.selectedItemId = R.id.nav_recents
+            }
             true
         }
         nav.getItemView(R.id.nav_browse)?.setOnLongClickListener {
-            nav.selectedItemId = R.id.nav_browse
-            nav.post {
-                val controller =
-                    router.backstack.firstOrNull()?.controller as? BottomSheetController
-                controller?.showSheet()
+            if (nav.selectedItemId != R.id.nav_browse) {
+                nav.selectedItemId = R.id.nav_browse
             }
+            router.pushController(GlobalSearchController().withFadeTransaction())
             true
         }
 

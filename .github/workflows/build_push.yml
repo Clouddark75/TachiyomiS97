@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version'
+        description: 'Version (without the v prefix)'
         required: true
         type: string
         
@@ -53,7 +53,7 @@ jobs:
         if: github.event.inputs.version != ''
         run: |
           set -x
-          echo "VERSION_TAG=${{github.event.inputs.version}}" >> $GITHUB_ENV
+          echo "VERSION_TAG=v${{github.event.inputs.version}}" >> $GITHUB_ENV
 
       - name: Get tag name from head commit message
         if: startsWith(github.event.head_commit.message, 'Version ')
@@ -99,10 +99,13 @@ jobs:
           tag_name: ${{ env.VERSION_TAG }}
           name: TachiyomiS97 ${{ env.VERSION_TAG }}
           body: |
-            [Full changelog](https://github.com/saud-97/TachiyomiS97/compare/${{ steps.last_release.outputs.tag_name }}...${{ env.VERSION_TAG }})
-            ### Changes
+            [Full changelog ${{ steps.last_release.outputs.tag_name }} -> ${{ env.VERSION_TAG }}](https://github.com/saud-97/TachiyomiS97/compare/${{ steps.last_release.outputs.tag_name }}...${{ env.VERSION_TAG }})
+            ### S97 updates
             ${{ env.COMMIT_LOGS }}
 
+            ### J2K updates
+            
+            
             ---
 
             ### Checksums

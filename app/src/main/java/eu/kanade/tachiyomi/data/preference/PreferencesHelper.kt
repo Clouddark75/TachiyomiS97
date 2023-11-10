@@ -419,6 +419,8 @@ class PreferencesHelper(val context: Context) {
 
     fun onlySearchPinned() = flowPrefs.getBoolean(Keys.onlySearchPinned, false)
 
+    fun fetchMangaChapters() = flowPrefs.getBoolean(Keys.fetchMangaChapters, false)
+
     fun hideInLibraryItems() = flowPrefs.getBoolean("browse_hide_in_library_items", false)
 
     // Tutorial preferences

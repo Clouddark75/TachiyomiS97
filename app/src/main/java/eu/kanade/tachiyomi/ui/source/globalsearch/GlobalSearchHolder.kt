@@ -94,6 +94,10 @@ class GlobalSearchHolder(view: View, val adapter: GlobalSearchAdapter) :
         getHolder(manga)?.setImage(manga)
     }
 
+    fun setChaptersCount(manga: Manga) {
+        getHolder(manga)?.setChaptersCount(manga)
+    }
+
     /**
      * Returns the view holder for the given manga.
      *

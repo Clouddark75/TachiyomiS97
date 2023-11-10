@@ -107,6 +107,12 @@ class SettingsBrowseController : SettingsController() {
                 key = PreferenceKeys.onlySearchPinned
                 titleRes = R.string.only_search_pinned_when
             }
+            switchPreference {
+                key = PreferenceKeys.fetchMangaChapters
+                titleRes = R.string.fetch_manga_chapters
+                summaryRes = R.string.fetch_manga_chapters_summary
+                defaultValue = false
+            }
         }
 
         preferenceCategory {

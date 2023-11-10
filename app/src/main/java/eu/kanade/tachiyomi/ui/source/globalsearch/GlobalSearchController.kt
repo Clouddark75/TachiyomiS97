@@ -304,5 +304,6 @@ open class GlobalSearchController(
      */
     fun onMangaInitialized(source: CatalogueSource, manga: Manga) {
         getHolder(source)?.setImage(manga)
+        getHolder(source)?.setChaptersCount(manga)
     }
 }

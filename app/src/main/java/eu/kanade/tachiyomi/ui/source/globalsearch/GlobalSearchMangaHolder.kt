@@ -7,14 +7,19 @@ import coil.Coil
 import coil.dispose
 import coil.request.CachePolicy
 import coil.request.ImageRequest
+import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.data.database.DatabaseHelper
 import eu.kanade.tachiyomi.data.database.models.Manga
 import eu.kanade.tachiyomi.data.image.coil.CoverViewTarget
 import eu.kanade.tachiyomi.data.image.coil.MangaCoverFetcher
+import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.databinding.SourceGlobalSearchControllerCardItemBinding
 import eu.kanade.tachiyomi.ui.base.holder.BaseFlexibleViewHolder
 import eu.kanade.tachiyomi.util.system.dpToPx
 import eu.kanade.tachiyomi.util.view.makeShapeCorners
 import eu.kanade.tachiyomi.util.view.setCards
+import uy.kohesive.injekt.injectLazy
+import java.text.DecimalFormat
 
 class GlobalSearchMangaHolder(view: View, adapter: GlobalSearchCardAdapter) :
     BaseFlexibleViewHolder(view, adapter) {
@@ -48,6 +53,7 @@ class GlobalSearchMangaHolder(view: View, adapter: GlobalSearchCardAdapter) :
         binding.title.text = manga.title
         binding.favoriteButton.isVisible = manga.favorite
         setImage(manga)
+        setChaptersCount(manga)
     }
 
     fun setImage(manga: Manga) {
@@ -61,5 +67,37 @@ class GlobalSearchMangaHolder(view: View, adapter: GlobalSearchCardAdapter) :
                 .build()
             Coil.imageLoader(itemView.context).enqueue(request)
         }
+    }
+
+    fun setChaptersCount(manga: Manga) {
+        if (!preferences.fetchMangaChapters().get()) {
+            return
+        }
+        val mangaChapters = db.getChapters(manga).executeAsBlocking()
+        if (mangaChapters.isEmpty()) {
+            return
+        }
+
+        if (!manga.favorite) {
+            binding.unreadDownloadBadge.badgeView.setChapters(mangaChapters.size)
+        }
+
+        val latestChapter = mangaChapters.maxOfOrNull { it.chapter_number } ?: -1f
+        if (latestChapter >= 0f) {
+            binding.subtitle.text = binding.root.context.getString(
+                R.string.latest_,
+                DecimalFormat("#.#").format(latestChapter),
+            )
+        } else {
+            binding.subtitle.text = binding.root.context.getString(
+                R.string.latest_,
+                binding.root.context.getString(R.string.unknown),
+            )
+        }
+    }
+
+    private companion object {
+        private val db: DatabaseHelper by injectLazy()
+        private val preferences: PreferencesHelper by injectLazy()
     }
 }

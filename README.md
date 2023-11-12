@@ -1,8 +1,13 @@
-| Download | Contribute | Support Server |
-|-------|----------|---------|
-| [![release](https://img.shields.io/github/v/release/saud-97/tachiyomis97.svg?maxAge=3600&label=download)](https://github.com/saud-97/TachiyomiS97/releases) | [![Translation status](https://hosted.weblate.org/widgets/tachiyomi/-/tachiyomi-j2k/svg-badge.svg)](https://hosted.weblate.org/engage/tachiyomi/?utm_source=widget) | [![Discord](https://img.shields.io/discord/349436576037732353.svg?label=discord&labelColor=7289da&color=2c2f33&style=flat)](https://discord.gg/tachiyomi) |
+| Download | Contribute                                                                                                                                                |          ⭐                       |
+|-------|------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------|
+| [![release](https://img.shields.io/github/v/release/saud-97/tachiyomis97.svg?maxAge=3600&label=download)](https://github.com/saud-97/TachiyomiS97/releases) | [![Translation status](https://hosted.weblate.org/widgets/tachiyomi/-/tachiyomi-j2k/svg-badge.svg)](https://hosted.weblate.org/engage/tachiyomi/?utm_source=widget) | Give the project a star if you liked it 
+
+| Support For J2K features                                                                                                                               | Contact Me                                                                                                                                                       
+|--------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [![Discord](https://img.shields.io/discord/1195734228319617024.svg?label=discord&labelColor=7289da&color=2c2f33&style=flat)](https://discord.gg/mihon) | [![Discord](https://img.shields.io/discord/1176845724688855180.svg?label=discord&labelColor=7289da&color=2c2f33&style=flat)](https://discord.gg/yChKQXKBVs) |
+
 # ![app icon](./.github/readme-images/app-icon.png) TachiyomiS97
-TachiyomiS97 is a tweaked version of [TachiyomiJ2K](https://github.com/jays2kings/tachiyomiJ2K) with my own features added. Based on the original [Tachiyomi](https://github.com/tachiyomiorg/tachiyomi).
+TachiyomiS97 is a modified version of [TachiyomiJ2K](https://github.com/jays2kings/tachiyomiJ2K) purely made  to increase speed and enhance user experience. Based on the original [Tachiyomi](https://github.com/tachiyomiorg/tachiyomi).
 
 ![screenshots of app](./.github/readme-images/screens.gif)
 
@@ -12,12 +17,13 @@ New features only in this fork include:
 * Up to 5x times faster Global Updates
 * Up to 3x times faster Chapter Downloads
 * Allow manga read progress to sync cross-devices via trackers [Experimental]
+* Ability to view total chapter count and latest chapter numbers in Global Search
 * Auto download next unread chapters **while reading** instead of after reading
 * Added force bypass feature for cloudflare failures [Experimental - depends on source protection]
 * Added more back up intervals and increased max number of backups
 * Directly access a manga by URL via Global Search (only if the source is installed)
 * Silenced mass download and mass update warnings
-* Other minor tweaks
+* Other minor tweaks under the hood
 
 ## Features
 

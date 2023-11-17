@@ -119,7 +119,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
     // Boolean to determine if DownloadManager has downloads
     private var hasDownloads = false
 
-    private val requestSemaphore = Semaphore(5)
+    private val requestSemaphore = Semaphore(25)
 
     // For updates delete removed chapters if not preference is set as well
     private val deleteRemoved by lazy { preferences.deleteRemovedChapters().get() != 1 }
@@ -212,7 +212,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
     private suspend fun updateChaptersJob(mangaToAdd: List<LibraryManga>) {
         // Initialize the variables holding the progress of the updates.
         mangaToUpdate.addAll(mangaToAdd)
-        mangaToUpdateMap.putAll(mangaToAdd.groupBy { it.source + (0..4).random() })
+        mangaToUpdateMap.putAll(mangaToAdd.groupBy { it.source })
         loggedServices = trackManager.services.filter { it.isLogged }
         // checkIfMassiveUpdate()
         coroutineScope {

@@ -648,6 +648,7 @@ class RecentsController(bundle: Bundle? = null) :
 
     fun updateDownloadStatus(isRunning: Boolean) {
         binding.downloadBottomSheet.dlBottomSheet.update(isRunning)
+        (activity as? MainActivity)?.downloadStatusChanged(isRunning)
     }
 
     private fun refreshItem(chapterId: Long) {

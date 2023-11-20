@@ -517,7 +517,10 @@ class RecentsPresenter(
                 this.download = download
             }
         }
-        presenterScope.launchUI { view?.updateChapterDownload(download) }
+        presenterScope.launchUI {
+            view?.updateChapterDownload(download)
+            view?.updateDownloadStatus(!downloadManager.isPaused())
+        }
     }
 
     override fun updateDownloads() {

@@ -29,6 +29,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.preference.PreferenceValues
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.databinding.BrowseControllerBinding
+import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.util.ExtensionInstaller
 import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.LocalSource
@@ -69,6 +70,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.parcelize.Parcelize
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import uy.kohesive.injekt.injectLazy
 import java.util.Date
 import java.util.Locale
 import kotlin.math.max
@@ -81,6 +83,7 @@ import kotlin.math.max
 class BrowseController :
     BaseController<BrowseControllerBinding>(),
     FlexibleAdapter.OnItemClickListener,
+    FlexibleAdapter.OnItemLongClickListener,
     SourceAdapter.SourceListener,
     RootSearchInterface,
     FloatingSearchInterface,
@@ -90,6 +93,7 @@ class BrowseController :
      * Application preferences.
      */
     private val preferences: PreferencesHelper = Injekt.get()
+    private val extensionManager: ExtensionManager by injectLazy()
 
     /**
      * Adapter containing sources.
@@ -577,6 +581,12 @@ class BrowseController :
         // Open the catalogue view.
         openCatalogue(source, BrowseSourceController(source))
         return false
+    }
+
+    override fun onItemLongClick(position: Int) {
+        val item = adapter?.getItem(position) as? SourceItem ?: return
+        val extension = extensionManager.installedExtensionsFlow.value.find { it.sources.any { source -> source.id == item.source.id } } ?: return
+        extensionManager.uninstallExtension(extension.pkgName)
     }
 
     fun hideCatalogue(position: Int) {

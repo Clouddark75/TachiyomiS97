@@ -56,14 +56,14 @@ class CloudflareInterceptor(
                             break
                         } catch (e: CloudflareBypassException) {
                             if (i == 5) {
+                                val msg = "All attempts to force bypass cloudflare has failed"
+                                Handler(Looper.getMainLooper()).post {
+                                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                }
                                 throw e
                             }
-                            // clearwebviewdata
+                            // clear webview data
                             context.applicationInfo?.dataDir?.let { File("$it/app_webview/").deleteRecursively() }
-                            val msg = "Trying to force bypass cloudflare. Attempt: $i"
-                            Handler(Looper.getMainLooper()).post {
-                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                            }
                         }
                     }
                 }

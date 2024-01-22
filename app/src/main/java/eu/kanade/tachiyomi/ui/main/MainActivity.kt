@@ -86,7 +86,7 @@ import eu.kanade.tachiyomi.data.updater.AppUpdateResult
 import eu.kanade.tachiyomi.data.updater.RELEASE_URL
 import eu.kanade.tachiyomi.databinding.MainActivityBinding
 import eu.kanade.tachiyomi.extension.ExtensionManager
-import eu.kanade.tachiyomi.extension.api.ExtensionGithubApi
+import eu.kanade.tachiyomi.extension.api.ExtensionApi
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.ui.base.MaterialMenuSheet
 import eu.kanade.tachiyomi.ui.base.SmallToolbarInterface
@@ -107,6 +107,7 @@ import eu.kanade.tachiyomi.ui.setting.SettingsMainController
 import eu.kanade.tachiyomi.ui.source.BrowseController
 import eu.kanade.tachiyomi.ui.source.browse.BrowseSourceController
 import eu.kanade.tachiyomi.ui.source.globalsearch.GlobalSearchController
+import eu.kanade.tachiyomi.ui.source.browse.repos.RepoController
 import eu.kanade.tachiyomi.util.manga.MangaCoverMetadata
 import eu.kanade.tachiyomi.util.manga.MangaShortcutManager
 import eu.kanade.tachiyomi.util.system.contextCompatDrawable
@@ -972,7 +973,7 @@ open class MainActivity : BaseActivity<MainActivityBinding>() {
             lifecycleScope.launch(Dispatchers.IO) {
                 try {
                     extensionManager.findAvailableExtensions()
-                    val pendingUpdates = ExtensionGithubApi().checkForUpdates(
+                    val pendingUpdates = ExtensionApi().checkForUpdates(
                         this@MainActivity,
                         extensionManager.availableExtensionsFlow.value.takeIf { it.isNotEmpty() },
                     )
@@ -1068,6 +1069,15 @@ open class MainActivity : BaseActivity<MainActivityBinding>() {
                     val controller =
                         router.backstack.firstOrNull()?.controller as? RecentsController
                     controller?.showSheet()
+                }
+            }
+            Intent.ACTION_VIEW -> {
+                // Deep link to add extension repo
+                if (intent.scheme == "tachiyomi" && intent.data?.host == "add-repo") {
+                    intent.data?.getQueryParameter("url")?.let { repoUrl ->
+                        router.popToRoot()
+                        router.pushController(RepoController(repoUrl).withFadeTransaction())
+                    }
                 }
             }
             else -> return false

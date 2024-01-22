@@ -104,10 +104,19 @@ jobs:
           name: TachiyomiS97 ${{ env.VERSION_TAG }}
           body: |
             [Full changelog ${{ steps.last_release.outputs.tag_name }} -> ${{ env.VERSION_TAG }}](https://github.com/saud-97/TachiyomiS97/compare/${{ steps.last_release.outputs.tag_name }}...${{ env.VERSION_TAG }})
-            ### S97 updates
+            ## S97 updates
             ${{ env.COMMIT_LOGS }}
 
-            ### J2K updates
+            **Additions**
+  
+  
+            **Changes**
+  
+  
+            **Fixes**
+
+
+            ## J2K updates
             
             
             ---

@@ -180,6 +180,19 @@ class ReaderChapterSheet @JvmOverloads constructor(context: Context, attrs: Attr
 
         adapter = FastAdapter.with(itemAdapter)
         binding.chapterRecycler.adapter = adapter
+        adapter?.onLongClickListener = { _, _, item, _ ->
+
+            if (!sheetBehavior.isExpanded() || activity.isLoading) {
+                false
+            } else {
+                if (item.chapter.id != viewModel.getCurrentChapter()?.chapter?.id) {
+                    viewModel.toggleRead(item.chapter)
+                    refreshList()
+                }
+                true
+            }
+        }
+
         adapter?.onClickListener = { _, _, item, position ->
             if (!sheetBehavior.isExpanded() || activity.isLoading) {
                 false

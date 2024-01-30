@@ -430,6 +430,18 @@ class ReaderViewModel(
         db.updateChapterProgress(chapter).executeAsBlocking()
     }
 
+    fun toggleRead(chapter: Chapter) {
+        chapter.read = !chapter.read
+        db.updateChapterProgress(chapter).executeAsBlocking()
+        if (chapter.read) {
+            if (preferences.removeAfterMarkedAsRead()) {
+                enqueueDeleteReadChapters(ReaderChapter(chapter))
+            } else {
+                deleteChapterIfNeeded(ReaderChapter(chapter))
+            }
+        }
+    }
+
     /**
      * Called when the viewers decide it's a good time to preload a [chapter] and improve the UX so
      * that the user doesn't have to wait too long to continue reading.

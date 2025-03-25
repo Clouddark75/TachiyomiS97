@@ -258,7 +258,7 @@ dependencies {
     implementation("com.github.gpanther:java-nat-sort:natural-comparator-1.1")
 
     // UI
-    implementation("com.github.dmitrymalkovich:material-design-dimens:1.4")
+    implementation("com.github.dmitrymalk:material-design-dimens:1.4")
     implementation("io.writeopia:loading-button:3.0.0")
     val fastAdapterVersion = "5.6.0"
     implementation("com.mikepenz:fastadapter:$fastAdapterVersion")
